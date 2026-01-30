@@ -1,0 +1,369 @@
+// Prisma Schema for Health Agent Application
+// Complete database design for healthcare platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String    // Hashed with bcrypt
+  name          String
+  avatar        String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  healthProfile  HealthProfile?
+  healthMetrics  HealthMetrics[]
+  appointments   Appointment[]
+  chatHistory    ChatHistory[]
+  recommendations Recommendation[]
+  sessions       Session[]
+
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ==================== HEALTH PROFILE ====================
+
+model HealthProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  
+  // Basic Info
+  dateOfBirth       DateTime?
+  age               Int?
+  gender            Gender?
+  height            Float?   // in cm
+  weight            Float?   // in kg
+  bloodType         String?
+  
+  // Health Conditions
+  existingConditions String[] // Array of conditions: diabetes, hypertension, etc.
+  allergies          String[] // Food/medicine allergies
+  medications        String[] // Current medications
+  injuries           String[] // Past/current injuries
+  
+  // Lifestyle
+  dietPreference    DietPreference?
+  activityLevel     ActivityLevel?
+  sleepQuality      SleepQuality?
+  stressLevel       StressLevel?
+  smokingStatus     SmokingStatus?
+  alcoholConsumption AlcoholConsumption?
+  
+  // Goals
+  primaryGoal       HealthGoal?
+  secondaryGoals    HealthGoal[]
+  targetWeight      Float?
+  
+  // Calculated Scores (0-100)
+  bmiScore          Float?
+  activityScore     Float?
+  sleepScore        Float?
+  stressScore       Float?
+  overallHealthScore Float?
+  
+  // Profile completion
+  isComplete        Boolean  @default(false)
+  completionStep    Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ==================== HEALTH METRICS (TIME-SERIES) ====================
+
+model HealthMetrics {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  date        DateTime @default(now())
+  weight      Float?
+  bloodPressureSystolic  Int?
+  bloodPressureDiastolic Int?
+  heartRate   Int?
+  bloodSugar  Float?
+  sleepHours  Float?
+  waterIntake Float?   // in liters
+  stepsCount  Int?
+  caloriesBurned Int?
+  caloriesConsumed Int?
+  mood        MoodLevel?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// ==================== DOCTORS & APPOINTMENTS ====================
+
+model Doctor {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  phone           String?
+  specialization  String
+  qualification   String
+  experience      Int      // Years of experience
+  consultationFee Float
+  avatar          String?
+  bio             String?
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  availability    DoctorAvailability[]
+  appointments    Appointment[]
+
+  @@index([specialization])
+}
+
+model DoctorAvailability {
+  id          String   @id @default(cuid())
+  doctorId    String
+  dayOfWeek   Int      // 0 = Sunday, 6 = Saturday
+  startTime   String   // "09:00"
+  endTime     String   // "17:00"
+  slotDuration Int     @default(30) // minutes
+  isActive    Boolean  @default(true)
+  
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, dayOfWeek, startTime])
+  @@index([doctorId])
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  userId          String
+  doctorId        String
+  
+  scheduledDate   DateTime
+  scheduledTime   String            // "10:00"
+  duration        Int               @default(30) // minutes
+  
+  status          AppointmentStatus @default(PENDING)
+  type            AppointmentType   @default(CONSULTATION)
+  
+  reason          String?
+  symptoms        String[]
+  notes           String?
+  
+  // AI-extracted data from natural language
+  originalQuery   String?
+  extractedIntent String?
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor          Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, scheduledDate, scheduledTime])
+  @@index([userId])
+  @@index([doctorId, scheduledDate])
+}
+
+// ==================== AI CHAT HISTORY ====================
+
+model ChatHistory {
+  id          String      @id @default(cuid())
+  userId      String
+  
+  sessionId   String      // Group messages by conversation session
+  role        ChatRole
+  content     String
+  metadata    Json?       // Store structured data, tool calls, etc.
+  
+  createdAt   DateTime    @default(now())
+  
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sessionId])
+  @@index([createdAt])
+}
+
+// ==================== RECOMMENDATIONS ====================
+
+model Recommendation {
+  id              String              @id @default(cuid())
+  userId          String
+  
+  type            RecommendationType
+  category        String?             // Specific category within type
+  title           String
+  content         Json                // Structured recommendation data
+  
+  // Context
+  basedOnProfile  Boolean             @default(true)
+  basedOnGoal     HealthGoal?
+  basedOnCondition String?
+  bodyPart        String?             // For exercise/yoga
+  
+  // Validity
+  validFrom       DateTime            @default(now())
+  validUntil      DateTime?
+  isActive        Boolean             @default(true)
+  
+  // User interaction
+  isFavorite      Boolean             @default(false)
+  isCompleted     Boolean             @default(false)
+  feedback        RecommendationFeedback?
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([userId, isActive])
+}
+
+// ==================== ENUMS ====================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum DietPreference {
+  VEGETARIAN
+  NON_VEGETARIAN
+  VEGAN
+  EGGETARIAN
+  PESCATARIAN
+  FLEXITARIAN
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTREMELY_ACTIVE
+}
+
+enum SleepQuality {
+  POOR
+  FAIR
+  GOOD
+  EXCELLENT
+}
+
+enum StressLevel {
+  LOW
+  MODERATE
+  HIGH
+  VERY_HIGH
+}
+
+enum SmokingStatus {
+  NEVER
+  FORMER
+  CURRENT
+  OCCASIONAL
+}
+
+enum AlcoholConsumption {
+  NONE
+  OCCASIONAL
+  MODERATE
+  HEAVY
+}
+
+enum HealthGoal {
+  WEIGHT_LOSS
+  WEIGHT_GAIN
+  MUSCLE_BUILDING
+  MAINTAIN_WEIGHT
+  IMPROVE_FITNESS
+  INCREASE_FLEXIBILITY
+  STRESS_REDUCTION
+  BETTER_SLEEP
+  MANAGE_CONDITION
+  GENERAL_WELLNESS
+  INJURY_RECOVERY
+}
+
+enum MoodLevel {
+  VERY_LOW
+  LOW
+  NEUTRAL
+  GOOD
+  EXCELLENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum AppointmentType {
+  CONSULTATION
+  FOLLOW_UP
+  CHECKUP
+  EMERGENCY
+  TELECONSULTATION
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum RecommendationType {
+  DIET
+  EXERCISE
+  YOGA
+  LIFESTYLE
+  DISEASE_MANAGEMENT
+  GOAL_BASED
+  WEEKLY_PLAN
+}
+
+enum RecommendationFeedback {
+  HELPFUL
+  NOT_HELPFUL
+  TOO_EASY
+  TOO_HARD
+  IRRELEVANT
+}

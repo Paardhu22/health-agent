@@ -1,0 +1,244 @@
+// Landing Page
+import Link from 'next/link';
+import { 
+  Heart, 
+  Brain, 
+  Apple, 
+  Dumbbell, 
+  Calendar, 
+  MessageCircle,
+  Shield,
+  Sparkles,
+  ChevronRight,
+  Activity
+} from 'lucide-react';
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-health-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-health-text">Health Agent</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="btn-ghost">
+                Sign In
+              </Link>
+              <Link href="/register" className="btn-primary">
+                Get Started
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-6">
+            <Sparkles className="w-4 h-4" />
+            AI-Powered Health Recommendations
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-bold text-health-text mb-6 leading-tight">
+            Your Personal AI
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"> Health Assistant</span>
+          </h1>
+          <p className="text-xl text-health-muted max-w-2xl mx-auto mb-10">
+            Get personalized diet plans, exercise routines, yoga recommendations, and health guidance tailored to your unique profile. Powered by advanced AI.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/register" className="btn-primary text-lg px-8 py-3">
+              Start Your Health Journey
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </Link>
+            <Link href="/login" className="btn-secondary text-lg px-8 py-3">
+              I already have an account
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-health-text mb-4">Everything You Need for Better Health</h2>
+            <p className="text-health-muted max-w-2xl mx-auto">
+              Comprehensive health management powered by AI, designed around your unique health profile
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FeatureCard
+              icon={<MessageCircle className="w-6 h-6" />}
+              title="AI Health Chat"
+              description="Ask health questions and get personalized answers based on your health profile"
+              color="primary"
+            />
+            <FeatureCard
+              icon={<Apple className="w-6 h-6" />}
+              title="Diet Recommendations"
+              description="Personalized meal plans considering your conditions, allergies, and goals"
+              color="green"
+            />
+            <FeatureCard
+              icon={<Dumbbell className="w-6 h-6" />}
+              title="Exercise Plans"
+              description="Safe workout routines tailored to your fitness level and any injuries"
+              color="blue"
+            />
+            <FeatureCard
+              icon={<Activity className="w-6 h-6" />}
+              title="Yoga Sessions"
+              description="Yoga poses mapped to body parts and health conditions with safety guidelines"
+              color="purple"
+            />
+            <FeatureCard
+              icon={<Calendar className="w-6 h-6" />}
+              title="Doctor Appointments"
+              description="Book appointments with natural language - just say when you want to visit"
+              color="orange"
+            />
+            <FeatureCard
+              icon={<Brain className="w-6 h-6" />}
+              title="Health Assessment"
+              description="Track BMI, activity, sleep, and stress scores with AI-powered insights"
+              color="pink"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-health-text mb-4">How It Works</h2>
+            <p className="text-health-muted max-w-2xl mx-auto">
+              Get started in three simple steps
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <StepCard
+              number="1"
+              title="Create Your Profile"
+              description="Answer a few questions about your health, conditions, and goals to build your unique health profile"
+            />
+            <StepCard
+              number="2"
+              title="Get Personalized Advice"
+              description="Receive AI-powered recommendations for diet, exercise, and yoga tailored specifically to you"
+            />
+            <StepCard
+              number="3"
+              title="Track & Improve"
+              description="Monitor your progress, book doctor appointments, and continuously improve your health"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Safety Notice */}
+      <section className="py-16 px-4 bg-gradient-to-r from-primary-600 to-accent-600">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <Shield className="w-12 h-12 mx-auto mb-4 opacity-90" />
+          <h2 className="text-2xl font-bold mb-4">Your Safety is Our Priority</h2>
+          <p className="text-lg opacity-90 mb-6">
+            Health Agent provides general wellness guidance and is not a substitute for professional medical advice. 
+            Always consult with healthcare professionals for medical concerns.
+          </p>
+          <p className="text-sm opacity-75">
+            ⚠️ This application does not provide medical diagnoses or medication recommendations
+          </p>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-health-text mb-4">
+            Ready to Transform Your Health?
+          </h2>
+          <p className="text-health-muted mb-8">
+            Join thousands of users who are taking control of their health with AI-powered guidance
+          </p>
+          <Link href="/register" className="btn-primary text-lg px-8 py-3">
+            Create Free Account
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 border-t border-health-border">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Heart className="w-5 h-5 text-primary-600" />
+            <span className="font-semibold text-health-text">Health Agent</span>
+          </div>
+          <p className="text-sm text-health-muted">
+            © {new Date().getFullYear()} Health Agent. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ 
+  icon, 
+  title, 
+  description, 
+  color 
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  description: string;
+  color: string;
+}) {
+  const colorClasses: Record<string, string> = {
+    primary: 'bg-primary-100 text-primary-600',
+    green: 'bg-green-100 text-green-600',
+    blue: 'bg-blue-100 text-blue-600',
+    purple: 'bg-purple-100 text-purple-600',
+    orange: 'bg-orange-100 text-orange-600',
+    pink: 'bg-pink-100 text-pink-600',
+  };
+
+  return (
+    <div className="card card-hover">
+      <div className={`w-12 h-12 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-4`}>
+        {icon}
+      </div>
+      <h3 className="text-lg font-semibold text-health-text mb-2">{title}</h3>
+      <p className="text-health-muted">{description}</p>
+    </div>
+  );
+}
+
+function StepCard({ 
+  number, 
+  title, 
+  description 
+}: { 
+  number: string; 
+  title: string; 
+  description: string; 
+}) {
+  return (
+    <div className="text-center">
+      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-4">
+        {number}
+      </div>
+      <h3 className="text-xl font-semibold text-health-text mb-2">{title}</h3>
+      <p className="text-health-muted">{description}</p>
+    </div>
+  );
+}
