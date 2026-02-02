@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 import { getYogaRecommendation } from '@/lib/actions/recommendations';
-import { 
-  Loader2, 
+import {
+  Loader2,
   AlertCircle,
   RefreshCw,
   Clock,
@@ -20,6 +20,8 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { cn } from '@/lib/utils';
 
 const FOCUS_AREAS = [
   { id: 'stress_relief', label: 'Stress Relief', emoji: '😌', icon: Wind },
@@ -59,20 +61,20 @@ export default function YogaPage() {
     setIsLoading(true);
     setError(null);
     setCompletedPoses(new Set());
-    
+
     const focusLabel = FOCUS_AREAS.find(f => f.id === selectedFocus)?.label || 'General Wellness';
-    const request = specificRequest 
-      ? `Focus: ${focusLabel}. Duration: ${duration} minutes. Level: ${experienceLevel}. ${specificRequest}` 
+    const request = specificRequest
+      ? `Focus: ${focusLabel}. Duration: ${duration} minutes. Level: ${experienceLevel}. ${specificRequest}`
       : `Focus: ${focusLabel}. Duration: ${duration} minutes. Level: ${experienceLevel}.`;
-    
+
     const result = await getYogaRecommendation(focusLabel, request);
-    
+
     if (result.success) {
       setYogaPlan(result.data);
     } else {
       setError(result.error || 'Failed to generate yoga plan');
     }
-    
+
     setIsLoading(false);
   }
 
@@ -97,7 +99,7 @@ export default function YogaPage() {
       {/* Selection Section */}
       <div className="card mb-6">
         <h2 className="font-semibold text-health-text mb-4">Customize Your Practice</h2>
-        
+
         {/* Focus Area Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-health-text mb-2">
@@ -110,13 +112,14 @@ export default function YogaPage() {
                 <button
                   key={focus.id}
                   onClick={() => setSelectedFocus(focus.id)}
-                  className={`p-3 rounded-lg text-sm font-medium transition-all ${
+                  className={cn(
+                    "p-3 rounded-lg text-sm font-medium transition-all border",
                     selectedFocus === focus.id
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-health-text hover:bg-gray-200'
-                  }`}
+                      ? 'bg-primary-600 border-primary-600 text-white'
+                      : 'bg-white/5 border-white/10 text-health-text hover:bg-white/10'
+                  )}
                 >
-                  <Icon className={`w-5 h-5 mx-auto mb-1 ${selectedFocus === focus.id ? 'text-white' : 'text-primary-600'}`} />
+                  <Icon className={cn("w-5 h-5 mx-auto mb-1", selectedFocus === focus.id ? 'text-white' : 'text-primary-500')} />
                   {focus.label}
                 </button>
               );
@@ -134,14 +137,15 @@ export default function YogaPage() {
               <button
                 key={level.id}
                 onClick={() => setExperienceLevel(level.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 ${
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 border",
                   experienceLevel === level.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-health-text hover:bg-gray-200'
-                }`}
+                    ? 'bg-primary-600 border-primary-600 text-white'
+                    : 'bg-white/5 border-white/10 text-health-text hover:bg-white/10'
+                )}
               >
                 <span className="block">{level.label}</span>
-                <span className={`text-xs ${experienceLevel === level.id ? 'text-primary-200' : 'text-health-muted'}`}>
+                <span className={cn("text-xs", experienceLevel === level.id ? 'text-primary-200' : 'text-health-muted')}>
                   {level.desc}
                 </span>
               </button>
@@ -159,11 +163,12 @@ export default function YogaPage() {
               <button
                 key={d.id}
                 onClick={() => setDuration(d.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors border",
                   duration === d.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-health-text hover:bg-gray-200'
-                }`}
+                    ? 'bg-primary-600 border-primary-600 text-white'
+                    : 'bg-white/5 border-white/10 text-health-text hover:bg-white/10'
+                )}
               >
                 {d.label}
               </button>
@@ -185,10 +190,10 @@ export default function YogaPage() {
           />
         </div>
 
-        <button
+        <GradientButton
           onClick={generateYogaPlan}
           disabled={isLoading}
-          className="btn-primary"
+          className="w-full"
         >
           {isLoading ? (
             <>
@@ -206,10 +211,10 @@ export default function YogaPage() {
               Generate Yoga Practice
             </>
           )}
-        </button>
+        </GradientButton>
 
         {error && (
-          <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-2">
+          <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-start gap-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <p>{error}</p>
           </div>
@@ -252,8 +257,8 @@ export default function YogaPage() {
                   {Math.round((completedPoses.size / yogaPlan.poses.length) * 100)}%
                 </span>
               </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+              <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                <div
                   className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
                   style={{ width: `${(completedPoses.size / yogaPlan.poses.length) * 100}%` }}
                 />
@@ -263,12 +268,12 @@ export default function YogaPage() {
 
           {/* Opening Meditation */}
           {yogaPlan.openingMeditation && (
-            <div className="card bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <div className="card bg-purple-500/10 border-purple-500/20">
               <div className="flex items-center gap-2 mb-3">
-                <Wind className="w-5 h-5 text-purple-600" />
-                <h3 className="font-semibold text-purple-800">Opening Meditation & Breathing</h3>
+                <Wind className="w-5 h-5 text-purple-400" />
+                <h3 className="font-semibold text-purple-400">Opening Meditation & Breathing</h3>
               </div>
-              <p className="text-sm text-purple-700">{yogaPlan.openingMeditation}</p>
+              <p className="text-sm text-purple-300">{yogaPlan.openingMeditation}</p>
             </div>
           )}
 
@@ -277,9 +282,9 @@ export default function YogaPage() {
             <h3 className="font-semibold text-health-text mb-4">Yoga Poses (Asanas)</h3>
             <div className="space-y-3">
               {yogaPlan.poses?.map((pose: any, index: number) => (
-                <PoseCard 
-                  key={index} 
-                  pose={pose} 
+                <PoseCard
+                  key={index}
+                  pose={pose}
                   index={index}
                   isCompleted={completedPoses.has(index)}
                   onToggleComplete={() => togglePoseComplete(index)}
@@ -297,13 +302,13 @@ export default function YogaPage() {
               </div>
               <div className="space-y-3">
                 {yogaPlan.breathingExercises.map((exercise: any, i: number) => (
-                  <div key={i} className="p-4 rounded-lg border border-blue-100 bg-blue-50">
-                    <h4 className="font-medium text-blue-800">{exercise.name}</h4>
+                  <div key={i} className="p-4 rounded-lg border border-blue-500/20 bg-blue-500/10">
+                    <h4 className="font-medium text-blue-400">{exercise.name}</h4>
                     {exercise.duration && (
-                      <span className="text-xs text-blue-600">{exercise.duration}</span>
+                      <span className="text-xs text-blue-400">{exercise.duration}</span>
                     )}
                     {exercise.instructions && (
-                      <p className="text-sm text-blue-700 mt-2">{exercise.instructions}</p>
+                      <p className="text-sm text-blue-300 mt-2">{exercise.instructions}</p>
                     )}
                   </div>
                 ))}
@@ -313,12 +318,12 @@ export default function YogaPage() {
 
           {/* Closing Meditation */}
           {yogaPlan.closingMeditation && (
-            <div className="card bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+            <div className="card bg-indigo-500/10 border-indigo-500/20">
               <div className="flex items-center gap-2 mb-3">
-                <Moon className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-semibold text-indigo-800">Closing Meditation (Savasana)</h3>
+                <Moon className="w-5 h-5 text-indigo-400" />
+                <h3 className="font-semibold text-indigo-400">Closing Meditation (Savasana)</h3>
               </div>
-              <p className="text-sm text-indigo-700">{yogaPlan.closingMeditation}</p>
+              <p className="text-sm text-indigo-300">{yogaPlan.closingMeditation}</p>
             </div>
           )}
 
@@ -342,14 +347,14 @@ export default function YogaPage() {
 
           {/* Safety & Modifications */}
           {yogaPlan.modifications && yogaPlan.modifications.length > 0 && (
-            <div className="card bg-amber-50 border-amber-200">
+            <div className="card bg-amber-500/10 border-amber-500/20">
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-5 h-5 text-amber-600" />
-                <h3 className="font-semibold text-amber-800">Modifications & Safety Notes</h3>
+                <Shield className="w-5 h-5 text-amber-500" />
+                <h3 className="font-semibold text-amber-500">Modifications & Safety Notes</h3>
               </div>
               <ul className="space-y-2">
                 {yogaPlan.modifications.map((mod: string, i: number) => (
-                  <li key={i} className="text-sm text-amber-800 flex items-start gap-2">
+                  <li key={i} className="text-sm text-amber-400 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     {mod}
                   </li>
@@ -359,9 +364,9 @@ export default function YogaPage() {
           )}
 
           {/* Disclaimer */}
-          <div className="p-4 rounded-lg bg-gray-100 text-sm text-health-muted">
-            <strong>⚠️ Disclaimer:</strong> This yoga practice is for general wellness purposes only. 
-            Listen to your body and avoid poses that cause pain or discomfort. If you have any injuries 
+          <div className="p-4 rounded-lg bg-white/5 text-sm text-health-muted">
+            <strong>⚠️ Disclaimer:</strong> This yoga practice is for general wellness purposes only.
+            Listen to your body and avoid poses that cause pain or discomfort. If you have any injuries
             or health conditions, consult a healthcare provider before starting a yoga practice.
           </div>
         </div>
@@ -370,13 +375,13 @@ export default function YogaPage() {
   );
 }
 
-function PoseCard({ 
-  pose, 
-  index, 
-  isCompleted, 
-  onToggleComplete 
-}: { 
-  pose: any; 
+function PoseCard({
+  pose,
+  index,
+  isCompleted,
+  onToggleComplete
+}: {
+  pose: any;
   index: number;
   isCompleted: boolean;
   onToggleComplete: () => void;
@@ -384,22 +389,24 @@ function PoseCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div 
-      className={`rounded-lg border transition-all ${
-        isCompleted 
-          ? 'bg-green-50 border-green-200' 
-          : 'border-health-border hover:border-primary-300'
-      }`}
+    <div
+      className={cn(
+        "rounded-lg border transition-all",
+        isCompleted
+          ? 'bg-green-500/10 border-green-500/50'
+          : 'border-health-border hover:border-primary-500/50'
+      )}
     >
       <div className="p-4">
         <div className="flex items-center gap-4">
           <button
             onClick={onToggleComplete}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-              isCompleted 
-                ? 'bg-green-600 text-white' 
-                : 'bg-gradient-to-br from-green-100 to-teal-100 text-green-600 hover:from-green-200 hover:to-teal-200'
-            }`}
+            className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors",
+              isCompleted
+                ? 'bg-green-600 text-white'
+                : 'bg-gradient-to-br from-green-500/20 to-teal-500/20 text-green-400 hover:from-green-500/30 hover:to-teal-500/30'
+            )}
           >
             {isCompleted ? (
               <CheckCircle2 className="w-5 h-5" />
@@ -407,10 +414,10 @@ function PoseCard({
               <Leaf className="w-5 h-5" />
             )}
           </button>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h4 className={`font-medium ${isCompleted ? 'text-green-800 line-through' : 'text-health-text'}`}>
+              <h4 className={`font-medium ${isCompleted ? 'text-green-500 line-through' : 'text-health-text'}`}>
                 {pose.name}
               </h4>
               {pose.sanskritName && (
@@ -429,11 +436,11 @@ function PoseCard({
                 </span>
               )}
               {pose.difficulty && (
-                <span className={`text-xs px-2 py-1 rounded ${
-                  pose.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-                  pose.difficulty === 'Moderate' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-orange-100 text-orange-700'
-                }`}>
+                <span className={cn("text-xs px-2 py-1 rounded border",
+                  pose.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400 border-green-500/20' :
+                    pose.difficulty === 'Moderate' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20' :
+                      'bg-orange-500/20 text-orange-400 border-orange-500/20'
+                )}>
                   {pose.difficulty}
                 </span>
               )}
@@ -442,7 +449,7 @@ function PoseCard({
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
           >
             {isExpanded ? (
               <ChevronUp className="w-5 h-5 text-health-muted" />
@@ -476,15 +483,15 @@ function PoseCard({
               </div>
             )}
             {pose.breathingCue && (
-              <div className="p-3 rounded-lg bg-blue-50 text-sm">
-                <span className="font-medium text-blue-800">Breathing: </span>
-                <span className="text-blue-700">{pose.breathingCue}</span>
+              <div className="p-3 rounded-lg bg-blue-500/10 text-sm border border-blue-500/20">
+                <span className="font-medium text-blue-400">Breathing: </span>
+                <span className="text-blue-300">{pose.breathingCue}</span>
               </div>
             )}
             {pose.modification && (
-              <div className="p-3 rounded-lg bg-amber-50 text-sm">
-                <span className="font-medium text-amber-800">Modification: </span>
-                <span className="text-amber-700">{pose.modification}</span>
+              <div className="p-3 rounded-lg bg-amber-500/10 text-sm border border-amber-500/20">
+                <span className="font-medium text-amber-500">Modification: </span>
+                <span className="text-amber-400">{pose.modification}</span>
               </div>
             )}
           </div>

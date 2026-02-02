@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -8,7 +9,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: '#e2e8f0',
+        border: '#1e293b',
         primary: {
           50: '#f0fdf4',
           100: '#dcfce7',
@@ -34,11 +35,11 @@ module.exports = {
           900: '#0c4a6e',
         },
         health: {
-          bg: '#f8fafc',
-          card: '#ffffff',
-          border: '#e2e8f0',
-          text: '#1e293b',
-          muted: '#64748b',
+          bg: '#000000', // Pure Black
+          card: '#09090b', // Zinc-950 (very dark gray)
+          border: '#27272a', // Zinc-800
+          text: '#f8fafc', // Slate-50
+          muted: '#a1a1aa', // Zinc-400
         },
       },
       fontFamily: {

@@ -20,6 +20,8 @@ import {
   Stethoscope,
   Flower2,
 } from 'lucide-react';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   user: {
@@ -56,7 +58,7 @@ export function Sidebar({ user }: SidebarProps) {
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-health-border px-6 pb-4">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-health-card border-r border-[#27272a] px-6 pb-4">
           {/* Logo */}
           <div className="flex h-16 shrink-0 items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
@@ -67,18 +69,20 @@ export function Sidebar({ user }: SidebarProps) {
 
           {/* Profile Completion Warning */}
           {!user.healthProfile?.isComplete && (
-            <Link
-              href="/profile/setup"
-              className="flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-amber-800 text-sm hover:bg-amber-100 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center">
-                <User className="w-4 h-4 text-amber-700" />
-              </div>
-              <div>
-                <div className="font-medium">Complete Profile</div>
-                <div className="text-xs text-amber-600">For personalized advice</div>
-              </div>
-            </Link>
+            <GradientButton asChild className="w-full justify-start px-3 py-2 h-auto">
+              <Link
+                href="/profile/setup"
+                className="flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-white text-xs">Complete Profile</div>
+                  <div className="text-[10px] text-white/80">For personalized advice</div>
+                </div>
+              </Link>
+            </GradientButton>
           )}
 
           {/* Main Navigation */}
@@ -90,9 +94,12 @@ export function Sidebar({ user }: SidebarProps) {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className={isActive ? 'nav-link-active' : 'nav-link'}
+                      className={cn(
+                        isActive ? 'bg-primary-600/20 text-primary-400' : 'text-health-muted hover:text-health-text hover:bg-white/5',
+                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                      )}
                     >
-                      <item.icon className="w-5 h-5" />
+                      <item.icon className="w-5 h-5 shrink-0" />
                       {item.name}
                     </Link>
                   </li>
@@ -120,7 +127,7 @@ export function Sidebar({ user }: SidebarProps) {
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="nav-link w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="nav-link w-full text-red-500 hover:text-red-400 hover:bg-red-500/10"
                   >
                     <LogOut className="w-5 h-5" />
                     Sign Out
@@ -133,7 +140,7 @@ export function Sidebar({ user }: SidebarProps) {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-health-border">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#09090b] border-t border-[#27272a]">
         <div className="flex justify-around py-2">
           {[
             { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
@@ -147,9 +154,8 @@ export function Sidebar({ user }: SidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-3 py-1 text-xs ${
-                  isActive ? 'text-primary-600' : 'text-health-muted'
-                }`}
+                className={`flex flex-col items-center gap-1 px-3 py-1 text-xs ${isActive ? 'text-primary-600' : 'text-health-muted'
+                  }`}
               >
                 <item.icon className="w-5 h-5" />
                 {item.name}

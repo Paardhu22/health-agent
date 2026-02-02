@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   Target,
 } from 'lucide-react';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { cn } from '@/lib/utils';
 
 const BODY_PARTS = [
   { id: 'full_body', label: 'Full Body', emoji: '🏋️' },
@@ -98,10 +100,12 @@ export default function ExercisePage() {
               <button
                 key={part.id}
                 onClick={() => setSelectedBodyPart(part.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedBodyPart === part.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-health-text hover:bg-gray-200'
-                  }`}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors border",
+                  selectedBodyPart === part.id
+                    ? 'bg-primary-600 border-primary-600 text-white'
+                    : 'bg-white/5 border-white/10 text-health-text hover:bg-white/10'
+                )}
               >
                 {part.emoji} {part.label}
               </button>
@@ -119,10 +123,12 @@ export default function ExercisePage() {
               <button
                 key={level.id}
                 onClick={() => setFitnessLevel(level.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${fitnessLevel === level.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-health-text hover:bg-gray-200'
-                  }`}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors border",
+                  fitnessLevel === level.id
+                    ? 'bg-primary-600 border-primary-600 text-white'
+                    : 'bg-white/5 border-white/10 text-health-text hover:bg-white/10'
+                )}
               >
                 {level.label}
               </button>
@@ -144,10 +150,10 @@ export default function ExercisePage() {
           />
         </div>
 
-        <button
+        <GradientButton
           onClick={generateExercisePlan}
           disabled={isLoading}
-          className="btn-primary"
+          className="w-full"
         >
           {isLoading ? (
             <>
@@ -165,10 +171,10 @@ export default function ExercisePage() {
               Generate Exercise Plan
             </>
           )}
-        </button>
+        </GradientButton>
 
         {error && (
-          <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-2">
+          <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-start gap-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <p>{error}</p>
           </div>
@@ -221,7 +227,7 @@ export default function ExercisePage() {
                   {Math.round((completedExercises.size / exercisePlan.exercises.length) * 100)}%
                 </span>
               </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500"
                   style={{ width: `${(completedExercises.size / exercisePlan.exercises.length) * 100}%` }}
@@ -286,14 +292,14 @@ export default function ExercisePage() {
 
           {/* Safety Warnings */}
           {exercisePlan.safetyWarnings && exercisePlan.safetyWarnings.length > 0 && (
-            <div className="card bg-red-50 border-red-200">
+            <div className="card bg-red-500/10 border-red-500/20">
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-5 h-5 text-red-600" />
-                <h3 className="font-semibold text-red-800">Safety Warnings</h3>
+                <Shield className="w-5 h-5 text-red-500" />
+                <h3 className="font-semibold text-red-500">Safety Warnings</h3>
               </div>
               <ul className="space-y-2">
                 {exercisePlan.safetyWarnings.map((warning: string, i: number) => (
-                  <li key={i} className="text-sm text-red-800 flex items-start gap-2">
+                  <li key={i} className="text-sm text-red-400 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     {warning}
                   </li>
@@ -304,21 +310,21 @@ export default function ExercisePage() {
 
           {/* Modifications */}
           {exercisePlan.modifications && exercisePlan.modifications.length > 0 && (
-            <div className="card bg-blue-50 border-blue-200">
+            <div className="card bg-blue-500/10 border-blue-500/20">
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-800">Modifications for Your Conditions</h3>
+                <Shield className="w-5 h-5 text-blue-500" />
+                <h3 className="font-semibold text-blue-400">Modifications for Your Conditions</h3>
               </div>
               <ul className="space-y-2">
                 {exercisePlan.modifications.map((mod: string, i: number) => (
-                  <li key={i} className="text-sm text-blue-800">• {mod}</li>
+                  <li key={i} className="text-sm text-blue-300">• {mod}</li>
                 ))}
               </ul>
             </div>
           )}
 
           {/* Disclaimer */}
-          <div className="p-4 rounded-lg bg-gray-100 text-sm text-health-muted">
+          <div className="p-4 rounded-lg bg-white/5 text-sm text-health-muted">
             <strong>⚠️ Disclaimer:</strong> This exercise plan is for general wellness purposes only.
             Stop any exercise that causes pain or discomfort. Consult a healthcare provider or certified
             fitness professional before starting any new exercise program, especially if you have
@@ -345,19 +351,23 @@ function ExerciseCard({
 
   return (
     <div
-      className={`rounded-lg border transition-all ${isCompleted
-          ? 'bg-green-50 border-green-200'
-          : 'border-health-border hover:border-primary-300'
-        }`}
+      className={cn(
+        "rounded-lg border transition-all",
+        isCompleted
+          ? 'bg-green-500/10 border-green-500/50'
+          : 'border-health-border hover:border-primary-500/50'
+      )}
     >
       <div className="p-4">
         <div className="flex items-center gap-4">
           <button
             onClick={onToggleComplete}
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isCompleted
+            className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
+              isCompleted
                 ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-              }`}
+                : 'bg-white/5 text-health-muted hover:bg-white/10'
+            )}
           >
             {isCompleted ? (
               <CheckCircle2 className="w-5 h-5" />
@@ -367,75 +377,75 @@ function ExerciseCard({
           </button>
 
           <div className="flex-1 min-w-0">
-            <h4 className={`font-medium ${isCompleted ? 'text-green-800 line-through' : 'text-health-text'}`}>
+            <h4 className={`font-medium ${isCompleted ? 'text-green-500 line-through' : 'text-health-text'}`}>
               {exercise.name}
             </h4>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {exercise.sets && (
-                <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
-                  {exercise.sets} sets
-                </span>
+            {exercise.sets && (
+              <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/20">
+                {exercise.sets} sets
+              </span>
+            )}
+            {exercise.reps && (
+              <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/20">
+                {exercise.reps} reps
+              </span>
+            )}
+            {exercise.duration && (
+              <span className="text-xs px-2 py-1 rounded bg-orange-500/20 text-orange-400 border border-orange-500/20">
+                {exercise.duration}
+              </span>
+            )}
+            {exercise.restBetweenSets && (
+              <span className="text-xs px-2 py-1 rounded bg-white/5 text-health-muted border border-white/10">
+                Rest: {exercise.restBetweenSets}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+        >
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5 text-health-muted" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-health-muted" />
+          )}
+        </button>
+      </div>
+
+      {
+        isExpanded && (
+          <div className="px-4 pb-4 pt-0">
+            <div className="pl-12 space-y-3">
+              {exercise.description && (
+                <p className="text-sm text-health-muted">{exercise.description}</p>
               )}
-              {exercise.reps && (
-                <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">
-                  {exercise.reps} reps
-                </span>
+              {exercise.instructions && exercise.instructions.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-health-text mb-2">Instructions:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    {exercise.instructions.map((step: string, i: number) => (
+                      <li key={i} className="text-sm text-health-muted">{step}</li>
+                    ))}
+                  </ol>
+                </div>
               )}
-              {exercise.duration && (
-                <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-700">
-                  {exercise.duration}
-                </span>
-              )}
-              {exercise.restBetweenSets && (
-                <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
-                  Rest: {exercise.restBetweenSets}
-                </span>
+              {exercise.targetMuscles && exercise.targetMuscles.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  <span className="text-sm text-health-muted">Targets: </span>
+                  {exercise.targetMuscles.map((muscle: string, i: number) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded bg-primary-500/20 text-primary-400 border border-primary-500/20">
+                      {muscle}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </div>
-
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-health-muted" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-health-muted" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className="px-4 pb-4 pt-0">
-          <div className="pl-12 space-y-3">
-            {exercise.description && (
-              <p className="text-sm text-health-muted">{exercise.description}</p>
-            )}
-            {exercise.instructions && exercise.instructions.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-health-text mb-2">Instructions:</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  {exercise.instructions.map((step: string, i: number) => (
-                    <li key={i} className="text-sm text-health-muted">{step}</li>
-                  ))}
-                </ol>
-              </div>
-            )}
-            {exercise.targetMuscles && exercise.targetMuscles.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                <span className="text-sm text-health-muted">Targets: </span>
-                {exercise.targetMuscles.map((muscle: string, i: number) => (
-                  <span key={i} className="text-xs px-2 py-1 rounded bg-primary-100 text-primary-700">
-                    {muscle}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

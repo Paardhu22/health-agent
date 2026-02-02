@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { getConditionGuidance, getUserConditions } from '@/lib/actions/recommendations';
-import { 
-  Loader2, 
+import {
+  Loader2,
   AlertCircle,
   Heart,
   Shield,
@@ -20,6 +20,8 @@ import {
   Plus,
   Search,
 } from 'lucide-react';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { cn } from '@/lib/utils';
 
 const COMMON_CONDITIONS = [
   'Diabetes Type 2',
@@ -66,19 +68,19 @@ export default function ConditionsPage() {
     setSelectedCondition(condition);
     setIsLoading(true);
     setError(null);
-    
+
     const result = await getConditionGuidance(condition);
-    
+
     if (result.success) {
       setGuidance(result.data);
     } else {
       setError(result.error || 'Failed to load guidance');
     }
-    
+
     setIsLoading(false);
   }
 
-  const filteredConditions = searchQuery 
+  const filteredConditions = searchQuery
     ? COMMON_CONDITIONS.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()))
     : COMMON_CONDITIONS;
 
@@ -102,11 +104,12 @@ export default function ConditionsPage() {
               <button
                 key={i}
                 onClick={() => loadGuidance(condition)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors border",
                   selectedCondition === condition
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
-                }`}
+                    ? 'bg-primary-600 border-primary-600 text-white'
+                    : 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
+                )}
               >
                 {condition}
               </button>
@@ -118,7 +121,7 @@ export default function ConditionsPage() {
       {/* Search & Browse */}
       <div className="card mb-6">
         <h2 className="font-semibold text-health-text mb-4">Browse Conditions</h2>
-        
+
         {/* Search */}
         <div className="relative mb-4">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-health-muted" />
@@ -137,11 +140,12 @@ export default function ConditionsPage() {
             <button
               key={condition}
               onClick={() => loadGuidance(condition)}
-              className={`p-3 rounded-lg text-sm font-medium text-left transition-colors ${
+              className={cn(
+                "p-3 rounded-lg text-sm font-medium text-left transition-colors border",
                 selectedCondition === condition
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-health-text hover:bg-gray-200'
-              }`}
+                  ? 'bg-primary-600 border-primary-600 text-white'
+                  : 'bg-white/5 border-white/10 text-health-text hover:bg-white/10'
+              )}
             >
               {condition}
             </button>
@@ -152,13 +156,13 @@ export default function ConditionsPage() {
         {searchQuery && filteredConditions.length === 0 && (
           <div className="mt-4 text-center">
             <p className="text-health-muted mb-2">Condition not found in list?</p>
-            <button
+            <GradientButton
               onClick={() => loadGuidance(searchQuery)}
-              className="btn-primary"
+              className="mt-2"
             >
               <Plus className="w-4 h-4 mr-2" />
               Get guidance for "{searchQuery}"
-            </button>
+            </GradientButton>
           </div>
         )}
       </div>
@@ -175,8 +179,8 @@ export default function ConditionsPage() {
 
       {/* Error State */}
       {error && (
-        <div className="card bg-red-50 border-red-200">
-          <div className="flex items-center gap-2 text-red-700">
+        <div className="card bg-red-500/10 border-red-500/20">
+          <div className="flex items-center gap-2 text-red-500">
             <AlertCircle className="w-5 h-5" />
             <p>{error}</p>
           </div>
@@ -193,11 +197,11 @@ export default function ConditionsPage() {
               <p className="text-health-muted mb-4">{guidance.overview}</p>
             )}
             {guidance.severity && (
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                guidance.severity === 'mild' ? 'bg-green-100 text-green-700' :
-                guidance.severity === 'moderate' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-red-100 text-red-700'
-              }`}>
+              <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border",
+                guidance.severity === 'mild' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                  guidance.severity === 'moderate' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                    'bg-red-500/10 text-red-400 border-red-500/20'
+              )}>
                 <Shield className="w-4 h-4" />
                 {guidance.severity} condition
               </div>
@@ -206,21 +210,21 @@ export default function ConditionsPage() {
 
           {/* Warning Signs */}
           {guidance.warningSignsToWatch && guidance.warningSignsToWatch.length > 0 && (
-            <div className="card bg-red-50 border-red-200">
+            <div className="card bg-red-500/10 border-red-500/20">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
-                <h3 className="font-semibold text-red-800">Warning Signs to Watch</h3>
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <h3 className="font-semibold text-red-500">Warning Signs to Watch</h3>
               </div>
               <ul className="space-y-2">
                 {guidance.warningSignsToWatch.map((sign: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                  <li key={i} className="flex items-start gap-2 text-sm text-red-400">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     {sign}
                   </li>
                 ))}
               </ul>
-              <div className="mt-4 p-3 rounded-lg bg-red-100">
-                <div className="flex items-center gap-2 text-red-800">
+              <div className="mt-4 p-3 rounded-lg bg-red-500/20 border border-red-500/20">
+                <div className="flex items-center gap-2 text-red-300">
                   <Phone className="w-4 h-4" />
                   <span className="text-sm font-medium">Seek immediate medical attention if these symptoms occur</span>
                 </div>
@@ -235,8 +239,8 @@ export default function ConditionsPage() {
               title="Diet Recommendations"
               items={guidance.dietRecommendations.include}
               avoid={guidance.dietRecommendations.avoid}
-              iconColor="text-green-600"
-              bgColor="bg-green-100"
+              iconColor="text-green-500"
+              bgColor="bg-green-500/20"
             />
           )}
 
@@ -247,8 +251,8 @@ export default function ConditionsPage() {
               title="Exercise Guidelines"
               items={guidance.exerciseGuidelines.recommended}
               avoid={guidance.exerciseGuidelines.avoid}
-              iconColor="text-blue-600"
-              bgColor="bg-blue-100"
+              iconColor="text-blue-500"
+              bgColor="bg-blue-500/20"
             />
           )}
 
@@ -256,15 +260,15 @@ export default function ConditionsPage() {
           {guidance.lifestyleChanges && guidance.lifestyleChanges.length > 0 && (
             <div className="card">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-purple-500" />
                 </div>
                 <h3 className="font-semibold text-health-text">Lifestyle Changes</h3>
               </div>
               <ul className="space-y-2">
                 {guidance.lifestyleChanges.map((change: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-health-text">
-                    <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
                     {change}
                   </li>
                 ))}
@@ -273,15 +277,15 @@ export default function ConditionsPage() {
           )}
 
           {/* Medication Notes */}
-          {guidance.medicationNotes && guidance.medicationNotes.length > 0 && (
-            <div className="card bg-blue-50 border-blue-200">
+          {error && (
+            <div className="card bg-blue-500/10 border-blue-500/20">
               <div className="flex items-center gap-2 mb-4">
-                <Pill className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-800">Medication Notes</h3>
+                <Pill className="w-5 h-5 text-blue-500" />
+                <h3 className="font-semibold text-blue-500">Medication Notes</h3>
               </div>
               <ul className="space-y-2">
                 {guidance.medicationNotes.map((note: string, i: number) => (
-                  <li key={i} className="text-sm text-blue-800 flex items-start gap-2">
+                  <li key={i} className="text-sm text-blue-400 flex items-start gap-2">
                     <Info className="w-4 h-4 shrink-0 mt-0.5" />
                     {note}
                   </li>
@@ -300,7 +304,7 @@ export default function ConditionsPage() {
               <ul className="space-y-2">
                 {guidance.monitoringTips.map((tip: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-health-text">
-                    <CheckCircle2 className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
                     {tip}
                   </li>
                 ))}
@@ -310,14 +314,14 @@ export default function ConditionsPage() {
 
           {/* When to See a Doctor */}
           {guidance.whenToSeeDoctor && guidance.whenToSeeDoctor.length > 0 && (
-            <div className="card bg-amber-50 border-amber-200">
+            <div className="card bg-amber-500/10 border-amber-500/20">
               <div className="flex items-center gap-2 mb-4">
-                <Phone className="w-5 h-5 text-amber-600" />
-                <h3 className="font-semibold text-amber-800">When to See a Doctor</h3>
+                <Phone className="w-5 h-5 text-amber-500" />
+                <h3 className="font-semibold text-amber-500">When to See a Doctor</h3>
               </div>
               <ul className="space-y-2">
                 {guidance.whenToSeeDoctor.map((item: string, i: number) => (
-                  <li key={i} className="text-sm text-amber-800 flex items-start gap-2">
+                  <li key={i} className="text-sm text-amber-400 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     {item}
                   </li>
@@ -327,11 +331,12 @@ export default function ConditionsPage() {
           )}
 
           {/* Disclaimer */}
-          <div className="p-4 rounded-lg bg-gray-100 text-sm text-health-muted">
-            <strong>⚠️ Important Disclaimer:</strong> This information is for educational purposes only 
-            and is not a substitute for professional medical advice, diagnosis, or treatment. Always 
-            seek the advice of your physician or other qualified health provider with any questions 
-            you may have regarding a medical condition. Never disregard professional medical advice 
+          {/* Disclaimer */}
+          <div className="p-4 rounded-lg bg-white/5 text-sm text-health-muted">
+            <strong>⚠️ Important Disclaimer:</strong> This information is for educational purposes only
+            and is not a substitute for professional medical advice, diagnosis, or treatment. Always
+            seek the advice of your physician or other qualified health provider with any questions
+            you may have regarding a medical condition. Never disregard professional medical advice
             or delay in seeking it because of something you have read here.
           </div>
         </div>
@@ -340,17 +345,17 @@ export default function ConditionsPage() {
   );
 }
 
-function GuidanceSection({ 
-  icon: Icon, 
-  title, 
-  items, 
-  avoid, 
-  iconColor, 
-  bgColor 
-}: { 
-  icon: any; 
-  title: string; 
-  items?: string[]; 
+function GuidanceSection({
+  icon: Icon,
+  title,
+  items,
+  avoid,
+  iconColor,
+  bgColor
+}: {
+  icon: any;
+  title: string;
+  items?: string[];
   avoid?: string[];
   iconColor: string;
   bgColor: string;
@@ -384,13 +389,13 @@ function GuidanceSection({
         <div className="mt-4 grid md:grid-cols-2 gap-4">
           {items && items.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-green-700 mb-2 flex items-center gap-1">
+              <h4 className="text-sm font-medium text-green-500 mb-2 flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4" /> Recommended
               </h4>
               <ul className="space-y-2">
                 {items.map((item: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-health-text">
-                    <span className="text-green-600">•</span>
+                    <span className="text-green-500">•</span>
                     {item}
                   </li>
                 ))}
@@ -399,13 +404,13 @@ function GuidanceSection({
           )}
           {avoid && avoid.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-red-700 mb-2 flex items-center gap-1">
+              <h4 className="text-sm font-medium text-red-500 mb-2 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" /> Avoid
               </h4>
               <ul className="space-y-2">
                 {avoid.map((item: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-health-text">
-                    <span className="text-red-600">•</span>
+                    <span className="text-red-500">•</span>
                     {item}
                   </li>
                 ))}

@@ -1,23 +1,25 @@
 // Landing Page
 import Link from 'next/link';
-import { 
-  Heart, 
-  Brain, 
-  Apple, 
-  Dumbbell, 
-  Calendar, 
+import {
+  Heart,
+  Brain,
+  Apple,
+  Dumbbell,
+  Calendar,
   MessageCircle,
   Shield,
   Sparkles,
   ChevronRight,
   Activity
 } from 'lucide-react';
+import { BackgroundPaths } from '@/components/ui/background-paths';
+import { GradientButton } from '@/components/ui/gradient-button';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
+    <div className="min-h-screen bg-health-bg">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-health-border">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-health-bg/80 backdrop-blur-md border-b border-health-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
@@ -27,45 +29,43 @@ export default function HomePage() {
               <span className="text-xl font-bold text-health-text">Health Agent</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/login" className="btn-ghost">
+              <Link href="/login" className="text-sm font-medium text-health-text hover:text-primary-600 transition-colors">
                 Sign In
               </Link>
-              <Link href="/register" className="btn-primary">
-                Get Started
-              </Link>
+              <GradientButton asChild className="min-w-[120px] px-6 py-2 h-10 text-sm">
+                <Link href="/register">
+                  Get Started
+                </Link>
+              </GradientButton>
             </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            AI-Powered Health Recommendations
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-bold text-health-text mb-6 leading-tight">
-            Your Personal AI
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"> Health Assistant</span>
-          </h1>
-          <p className="text-xl text-health-muted max-w-2xl mx-auto mb-10">
+      <BackgroundPaths title="Your Personal AI Health Assistant">
+        <div className="flex flex-col items-center">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
             Get personalized diet plans, exercise routines, yoga recommendations, and health guidance tailored to your unique profile. Powered by advanced AI.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register" className="btn-primary text-lg px-8 py-3">
-              Start Your Health Journey
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Link>
-            <Link href="/login" className="btn-secondary text-lg px-8 py-3">
-              I already have an account
-            </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <GradientButton asChild className="z-20 text-lg h-14 min-w-[200px]">
+              <Link href="/register">
+                Start Your Health Journey
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Link>
+            </GradientButton>
+            <GradientButton asChild variant="variant" className="z-20 text-lg h-14 min-w-[200px]">
+              <Link href="/login">
+                I already have an account
+              </Link>
+            </GradientButton>
           </div>
         </div>
-      </section>
+      </BackgroundPaths>
 
       {/* Features Grid */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-health-text mb-4">Everything You Need for Better Health</h2>
@@ -151,7 +151,7 @@ export default function HomePage() {
           <Shield className="w-12 h-12 mx-auto mb-4 opacity-90" />
           <h2 className="text-2xl font-bold mb-4">Your Safety is Our Priority</h2>
           <p className="text-lg opacity-90 mb-6">
-            Health Agent provides general wellness guidance and is not a substitute for professional medical advice. 
+            Health Agent provides general wellness guidance and is not a substitute for professional medical advice.
             Always consult with healthcare professionals for medical concerns.
           </p>
           <p className="text-sm opacity-75">
@@ -161,7 +161,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-health-text mb-4">
             Ready to Transform Your Health?
@@ -169,10 +169,12 @@ export default function HomePage() {
           <p className="text-health-muted mb-8">
             Join thousands of users who are taking control of their health with AI-powered guidance
           </p>
-          <Link href="/register" className="btn-primary text-lg px-8 py-3">
-            Create Free Account
-            <ChevronRight className="w-5 h-5 ml-2" />
-          </Link>
+          <GradientButton asChild className="text-lg h-14 px-8">
+            <Link href="/register">
+              Create Free Account
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </Link>
+          </GradientButton>
         </div>
       </section>
 
@@ -192,14 +194,14 @@ export default function HomePage() {
   );
 }
 
-function FeatureCard({ 
-  icon, 
-  title, 
-  description, 
-  color 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
+function FeatureCard({
+  icon,
+  title,
+  description,
+  color
+}: {
+  icon: React.ReactNode;
+  title: string;
   description: string;
   color: string;
 }) {
@@ -223,14 +225,14 @@ function FeatureCard({
   );
 }
 
-function StepCard({ 
-  number, 
-  title, 
-  description 
-}: { 
-  number: string; 
-  title: string; 
-  description: string; 
+function StepCard({
+  number,
+  title,
+  description
+}: {
+  number: string;
+  title: string;
+  description: string;
 }) {
   return (
     <div className="text-center">

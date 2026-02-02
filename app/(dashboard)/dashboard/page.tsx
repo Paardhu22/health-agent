@@ -19,10 +19,11 @@ import {
   Footprints,
 } from 'lucide-react';
 import { formatDate, formatGoal, getScoreColor, getScoreBgColor } from '@/lib/utils';
+import { GradientButton } from '@/components/ui/gradient-button';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  
+
   if (!user) return null;
 
   // Fetch user data
@@ -53,12 +54,12 @@ export default async function DashboardPage() {
   ]);
 
   const quickActions = [
-    { name: 'Chat with AI', href: '/chat', icon: MessageCircle, color: 'bg-primary-100 text-primary-600' },
-    { name: 'Diet Plan', href: '/diet', icon: Apple, color: 'bg-green-100 text-green-600' },
-    { name: 'Exercise', href: '/exercise', icon: Dumbbell, color: 'bg-blue-100 text-blue-600' },
-    { name: 'Yoga', href: '/yoga', icon: Flower2, color: 'bg-purple-100 text-purple-600' },
-    { name: 'Book Appointment', href: '/appointments', icon: Calendar, color: 'bg-orange-100 text-orange-600' },
-    { name: 'Track Metrics', href: '/metrics', icon: Activity, color: 'bg-pink-100 text-pink-600' },
+    { name: 'Chat with AI', href: '/chat', icon: MessageCircle, color: 'bg-primary-500/20 text-primary-400' },
+    { name: 'Diet Plan', href: '/diet', icon: Apple, color: 'bg-green-500/20 text-green-400' },
+    { name: 'Exercise', href: '/exercise', icon: Dumbbell, color: 'bg-blue-500/20 text-blue-400' },
+    { name: 'Yoga', href: '/yoga', icon: Flower2, color: 'bg-purple-500/20 text-purple-400' },
+    { name: 'Book Appointment', href: '/appointments', icon: Calendar, color: 'bg-orange-500/20 text-orange-400' },
+    { name: 'Track Metrics', href: '/metrics', icon: Activity, color: 'bg-pink-500/20 text-pink-400' },
   ];
 
   return (
@@ -75,10 +76,12 @@ export default async function DashboardPage() {
             </p>
           </div>
           {!healthProfile?.isComplete && (
-            <Link href="/profile/setup" className="btn bg-white text-primary-700 hover:bg-primary-50">
-              Complete Profile
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
+            <GradientButton asChild className="bg-white text-primary-700 hover:bg-primary-50">
+              <Link href="/profile/setup">
+                Complete Profile
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Link>
+            </GradientButton>
           )}
         </div>
       </div>
@@ -121,7 +124,7 @@ export default async function DashboardPage() {
             <Link
               key={action.name}
               href={action.href}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-gray-50 transition-colors"
+              className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-health-muted/10 transition-colors"
             >
               <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center`}>
                 <action.icon className="w-6 h-6" />
@@ -142,7 +145,7 @@ export default async function DashboardPage() {
               Edit Profile
             </Link>
           </div>
-          
+
           {healthProfile ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -159,7 +162,7 @@ export default async function DashboardPage() {
                   </>
                 )}
               </div>
-              
+
               {healthProfile.primaryGoal && (
                 <div className="pt-4 border-t border-health-border">
                   <p className="text-sm text-health-muted mb-1">Primary Goal</p>
@@ -183,9 +186,11 @@ export default async function DashboardPage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-health-muted mb-4">No health profile yet</p>
-              <Link href="/profile/setup" className="btn-primary">
-                Create Profile
-              </Link>
+              <GradientButton asChild>
+                <Link href="/profile/setup">
+                  Create Profile
+                </Link>
+              </GradientButton>
             </div>
           )}
         </div>
@@ -198,15 +203,15 @@ export default async function DashboardPage() {
               View All
             </Link>
           </div>
-          
+
           {upcomingAppointments.length > 0 ? (
             <div className="space-y-3">
               {upcomingAppointments.map((appointment) => (
                 <div
                   key={appointment.id}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-gray-50"
+                  className="flex items-center gap-4 p-3 rounded-lg bg-health-muted/10"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-primary-500/20 text-primary-400 flex items-center justify-center">
                     <Calendar className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -217,9 +222,8 @@ export default async function DashboardPage() {
                       {formatDate(appointment.scheduledDate)} at {appointment.scheduledTime}
                     </p>
                   </div>
-                  <span className={`badge ${
-                    appointment.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'
-                  }`}>
+                  <span className={`badge ${appointment.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'
+                    }`}>
                     {appointment.status.toLowerCase()}
                   </span>
                 </div>
@@ -228,9 +232,11 @@ export default async function DashboardPage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-health-muted mb-4">No upcoming appointments</p>
-              <Link href="/appointments" className="btn-primary">
-                Book Appointment
-              </Link>
+              <GradientButton asChild>
+                <Link href="/appointments">
+                  Book Appointment
+                </Link>
+              </GradientButton>
             </div>
           )}
         </div>
@@ -245,7 +251,7 @@ export default async function DashboardPage() {
               View All
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {recentMetrics[0]?.weight && (
               <MetricCard
@@ -292,24 +298,26 @@ export default async function DashboardPage() {
               Chat with our AI health assistant for personalized guidance
             </p>
           </div>
-          <Link href="/chat" className="btn bg-white text-accent-700 hover:bg-accent-50">
-            <MessageCircle className="w-5 h-5 mr-2" />
-            Start Chat
-          </Link>
+          <GradientButton asChild className="bg-white text-accent-700 hover:bg-accent-50">
+            <Link href="/chat">
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Start Chat
+            </Link>
+          </GradientButton>
         </div>
       </div>
     </div>
   );
 }
 
-function ScoreCard({ 
-  icon, 
-  label, 
-  score, 
-  color 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
+function ScoreCard({
+  icon,
+  label,
+  score,
+  color
+}: {
+  icon: React.ReactNode;
+  label: string;
   score: number;
   color: string;
 }) {
@@ -363,16 +371,15 @@ function MetricCard({
   trend: 'up' | 'down' | 'stable' | null;
 }) {
   return (
-    <div className="p-4 rounded-lg bg-gray-50">
+    <div className="p-4 rounded-lg bg-health-muted/10">
       <div className="flex items-center justify-between mb-2">
         <span className="text-health-muted">{icon}</span>
         {trend && (
-          <span className={`${
-            trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-400'
-          }`}>
+          <span className={`${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-400'
+            }`}>
             {trend === 'up' ? <TrendingUp className="w-4 h-4" /> :
-             trend === 'down' ? <TrendingDown className="w-4 h-4" /> :
-             <Minus className="w-4 h-4" />}
+              trend === 'down' ? <TrendingDown className="w-4 h-4" /> :
+                <Minus className="w-4 h-4" />}
           </span>
         )}
       </div>
@@ -385,7 +392,7 @@ function MetricCard({
 function getTrend(metrics: any[], field: string): 'up' | 'down' | 'stable' | null {
   const values = metrics.map(m => m[field]).filter(v => v !== null && v !== undefined);
   if (values.length < 2) return null;
-  
+
   const diff = values[0] - values[values.length - 1];
   if (Math.abs(diff) < 0.01 * values[0]) return 'stable';
   return diff > 0 ? 'up' : 'down';
