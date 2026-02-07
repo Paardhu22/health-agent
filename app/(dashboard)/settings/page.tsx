@@ -20,6 +20,10 @@ import {
   ChevronRight,
   AlertCircle,
   Check,
+  Calendar,
+  Sparkles,
+  Mail,
+  Activity,
 } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { motion } from 'motion/react';
@@ -90,24 +94,28 @@ export default function SettingsPage() {
 
           <div className="space-y-4">
             <ToggleSetting
+              icon={Settings}
               label="Appointment Reminders"
               description="Get notified about upcoming appointments"
               enabled={notifications.appointments}
               onChange={(v) => setNotifications({ ...notifications, appointments: v })}
             />
             <ToggleSetting
+              icon={Bell}
               label="Daily Reminders"
               description="Reminders to log your health metrics"
               enabled={notifications.reminders}
               onChange={(v) => setNotifications({ ...notifications, reminders: v })}
             />
             <ToggleSetting
+              icon={Shield}
               label="Health Recommendations"
               description="Personalized health tips and suggestions"
               enabled={notifications.recommendations}
               onChange={(v) => setNotifications({ ...notifications, recommendations: v })}
             />
             <ToggleSetting
+              icon={Globe}
               label="Email Notifications"
               description="Receive updates via email"
               enabled={notifications.email}
@@ -314,11 +322,13 @@ function SettingsItem({
 }
 
 function ToggleSetting({
+  icon: Icon,
   label,
   description,
   enabled,
   onChange
 }: {
+  icon: any;
   label: string;
   description: string;
   enabled: boolean;
@@ -326,9 +336,14 @@ function ToggleSetting({
 }) {
   return (
     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
-      <div>
-        <p className="font-medium text-health-text">{label}</p>
-        <p className="text-sm text-health-muted">{description}</p>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-health-muted" />
+        </div>
+        <div className="text-left">
+          <p className="font-medium text-health-text">{label}</p>
+          <p className="text-sm text-health-muted">{description}</p>
+        </div>
       </div>
       <button
         onClick={() => onChange(!enabled)}

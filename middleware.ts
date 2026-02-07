@@ -2,10 +2,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || 'health-agent-default-secret-key'
-);
+import { getJwtSecretKey } from './lib/jwt-config';
 
 const COOKIE_NAME = 'health-agent-session';
 
@@ -38,7 +35,7 @@ export async function middleware(request: NextRequest) {
 
     if (token && (pathname === '/login' || pathname === '/register')) {
       try {
-        await jwtVerify(token, JWT_SECRET);
+        await jwtVerify(token, getJwtSecretKey(), { clockTolerance: 15 });
         return NextResponse.redirect(new URL('/dashboard', request.url));
       } catch {
         // Invalid token, let them access login/register
@@ -60,17 +57,43 @@ export async function middleware(request: NextRequest) {
       // No token, redirect to login
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
+      loginUrl.searchParams.set('source', 'middleware');
       return NextResponse.redirect(loginUrl);
     }
 
     try {
       // Verify token
-      await jwtVerify(token, JWT_SECRET);
+      await jwtVerify(token, getJwtSecretKey(), { clockTolerance: 15 });
       return NextResponse.next();
-    } catch {
+    } catch (error: any) {
+      console.error("Middleware Auth Error:", error);
       // Invalid token, redirect to login
-      const response = NextResponse.redirect(new URL('/login', request.url));
+      const url = new URL('/login', request.url);
+      url.searchParams.set('source', 'middleware_invalid');
+
+      // Add safe debug info
+      url.searchParams.set('error_name', error.name);
+      url.searchParams.set('error_msg', error.message.replace(/[^a-zA-Z0-9 ]/g, '')); // Sanitize
+      url.searchParams.set('code', error.code || 'unknown');
+
+      // Debug Env Var presence (DO NOT EXPOSE THE KEY)
+      // Just check if it's the default or custom
+      const secret = process.env.AUTH_SECRET || 'health-agent-default-secret-key-change-me-in-prod';
+      url.searchParams.set('slen', secret.length.toString());
+      url.searchParams.set('is_default', secret.includes('health-agent-default') ? 'true' : 'false');
+
+      const response = NextResponse.redirect(url);
+
+      // Force clearing the cookie by setting it to expire immediately
+      response.cookies.set({
+        name: COOKIE_NAME,
+        value: '',
+        expires: new Date(0),
+        path: '/',
+      });
+      // Also strictly delete it
       response.cookies.delete(COOKIE_NAME);
+
       return response;
     }
   }

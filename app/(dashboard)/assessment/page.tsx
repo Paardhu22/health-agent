@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { calculateHealthAssessment } from '@/lib/actions/metrics';
-import { 
-  Loader2, 
+import {
+  Loader2,
   AlertCircle,
   RefreshCw,
   Activity,
@@ -35,15 +35,15 @@ export default function AssessmentPage() {
   async function loadAssessment() {
     setIsLoading(true);
     setError(null);
-    
+
     const result = await calculateHealthAssessment();
-    
+
     if (result.success) {
       setAssessment(result.data);
     } else {
       setError(result.error || 'Failed to calculate health assessment');
     }
-    
+
     setIsLoading(false);
   }
 
@@ -111,35 +111,35 @@ export default function AssessmentPage() {
                     stroke="currentColor"
                     strokeWidth="12"
                     fill="none"
-                    strokeDasharray={`${(assessment.overallScore / 100) * 440} 440`}
+                    strokeDasharray={`${(assessment.overall.score / 100) * 440} 440`}
                     strokeLinecap="round"
-                    className={getScoreColor(assessment.overallScore)}
+                    className={getScoreColor(assessment.overall.score)}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className={`text-4xl font-bold ${getTextColor(assessment.overallScore)}`}>
-                    {assessment.overallScore}
+                  <span className={`text-4xl font-bold ${getTextColor(assessment.overall.score)}`}>
+                    {assessment.overall.score}
                   </span>
                   <span className="text-sm text-health-muted">out of 100</span>
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h2 className="text-2xl font-bold text-health-text mb-2">
-                  {getScoreLabel(assessment.overallScore)}
+                  {getScoreLabel(assessment.overall.score)}
                 </h2>
-                <p className="text-health-muted mb-4">{assessment.overallSummary}</p>
+                <p className="text-health-muted mb-4">{assessment.overall.summary}</p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                  {assessment.overallScore >= 80 && (
+                  {assessment.overall.score >= 80 && (
                     <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
                       ⭐ Excellent Health
                     </span>
                   )}
-                  {assessment.overallScore >= 60 && assessment.overallScore < 80 && (
+                  {assessment.overall.score >= 60 && assessment.overall.score < 80 && (
                     <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm">
                       💪 Good Progress
                     </span>
                   )}
-                  {assessment.overallScore < 60 && (
+                  {assessment.overall.score < 60 && (
                     <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm">
                       🎯 Room to Improve
                     </span>
@@ -154,43 +154,43 @@ export default function AssessmentPage() {
             <ScoreCard
               icon={Activity}
               label="BMI Score"
-              score={assessment.bmiScore}
-              details={assessment.bmiDetails}
+              score={assessment.bmi.score}
+              details={assessment.bmi.recommendation}
               color="blue"
             />
             <ScoreCard
               icon={Dumbbell}
               label="Activity Level"
-              score={assessment.activityScore}
-              details={assessment.activityDetails}
+              score={assessment.activity.score}
+              details={assessment.activity.recommendation}
               color="green"
             />
             <ScoreCard
               icon={Moon}
               label="Sleep Quality"
-              score={assessment.sleepScore}
-              details={assessment.sleepDetails}
+              score={assessment.sleep.score}
+              details={assessment.sleep.recommendation}
               color="purple"
             />
             <ScoreCard
               icon={Brain}
               label="Stress Level"
-              score={assessment.stressScore}
-              details={assessment.stressDetails}
+              score={assessment.stress.score}
+              details={assessment.stress.recommendation}
               color="orange"
             />
             <ScoreCard
               icon={Utensils}
               label="Nutrition"
-              score={assessment.nutritionScore}
-              details={assessment.nutritionDetails}
+              score={assessment.nutrition?.score || 50}
+              details={assessment.nutrition?.recommendation || "Maintain a balanced diet."}
               color="yellow"
             />
             <ScoreCard
               icon={Heart}
               label="Overall Wellness"
-              score={assessment.wellnessScore}
-              details={assessment.wellnessDetails}
+              score={assessment.overall.score}
+              details={assessment.overall.summary}
               color="red"
             />
           </div>
@@ -270,8 +270,8 @@ export default function AssessmentPage() {
           <div className="p-4 rounded-lg bg-gray-100 text-sm text-health-muted flex items-start gap-2">
             <Info className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
-              <strong>Note:</strong> This health assessment is based on the information in your profile 
-              and is for informational purposes only. It is not a medical diagnosis. For accurate health 
+              <strong>Note:</strong> This health assessment is based on the information in your profile
+              and is for informational purposes only. It is not a medical diagnosis. For accurate health
               evaluations, please consult with healthcare professionals.
             </div>
           </div>
@@ -281,16 +281,16 @@ export default function AssessmentPage() {
   );
 }
 
-function ScoreCard({ 
-  icon: Icon, 
-  label, 
-  score, 
-  details, 
-  color 
-}: { 
-  icon: any; 
-  label: string; 
-  score: number; 
+function ScoreCard({
+  icon: Icon,
+  label,
+  score,
+  details,
+  color
+}: {
+  icon: any;
+  label: string;
+  score: number;
   details?: string;
   color: string;
 }) {
@@ -324,7 +324,7 @@ function ScoreCard({
         )}
       </div>
       <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div 
+        <div
           className={`h-full ${colors.bar} transition-all duration-500`}
           style={{ width: `${score}%` }}
         />
@@ -353,11 +353,10 @@ function RecommendationCard({ recommendation, index }: { recommendation: any; in
           <h4 className="font-medium text-health-text">{recommendation.title}</h4>
           <p className="text-sm text-health-muted mt-1">{recommendation.description}</p>
         </div>
-        <span className={`text-xs px-2 py-1 rounded capitalize ${
-          priority === 'high' ? 'bg-red-100 text-red-700' :
-          priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-          'bg-blue-100 text-blue-700'
-        }`}>
+        <span className={`text-xs px-2 py-1 rounded capitalize ${priority === 'high' ? 'bg-red-100 text-red-700' :
+            priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-blue-100 text-blue-700'
+          }`}>
           {priority}
         </span>
       </div>

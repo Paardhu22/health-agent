@@ -20,7 +20,6 @@ import {
   Settings,
   Stethoscope,
   Pill,
-  Flower2,
 } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Typewriter } from '@/components/ui/typewriter';
@@ -42,7 +41,6 @@ const navigation = [
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Diet Plan', href: '/diet', icon: Apple },
   { name: 'Exercise', href: '/exercise', icon: Dumbbell },
-  { name: 'Yoga', href: '/yoga', icon: Flower2 },
   { name: 'Health Assessment', href: '/assessment', icon: BarChart3 },
   { name: 'Prescription Management', href: '/prescriptions', icon: Pill },
   { name: 'Goal Planner', href: '/goals', icon: Target },

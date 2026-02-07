@@ -15,6 +15,7 @@ import {
 import { BackgroundPaths } from '@/components/ui/background-paths';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { FreeDietPlanGenerator } from '@/components/landing/FreeDietPlanGenerator';
+import { SuccessStory } from '@/components/landing/SuccessStory';
 
 export default function HomePage() {
   return (
@@ -151,20 +152,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Safety Notice */}
-      <section className="py-16 px-4 bg-gradient-to-r from-primary-600 to-accent-600">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <Shield className="w-12 h-12 mx-auto mb-4 opacity-90" />
-          <h2 className="text-2xl font-bold mb-4">Your Safety is Our Priority</h2>
-          <p className="text-lg opacity-90 mb-6">
-            Health Agent provides general wellness guidance and is not a substitute for professional medical advice.
-            Always consult with healthcare professionals for medical concerns.
-          </p>
-          <p className="text-sm opacity-75">
-            ⚠️ This application does not provide medical diagnoses or medication recommendations
-          </p>
-        </div>
-      </section>
+      {/* Success Story */}
+      <SuccessStory />
 
       {/* CTA Section */}
       <section className="py-20 px-4">

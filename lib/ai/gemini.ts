@@ -86,7 +86,39 @@ export interface HealthScores {
   activity: { score: number; category: string; recommendation: string };
   sleep: { score: number; category: string; recommendation: string };
   stress: { score: number; category: string; recommendation: string };
+  nutrition: { score: number; category: string; recommendation: string };
   overall: { score: number; category: string; summary: string };
+  riskFactors: string[];
+  strengths: string[];
+  recommendations: Array<{ title: string; description: string; priority: string }>;
+  goalSuggestions: string[];
+}
+
+export interface GoalPlan {
+  goalName: string;
+  overview: string;
+  timeline: string;
+  milestones: Array<{
+    title: string;
+    description: string;
+    timeframe: string;
+  }>;
+  weeklyPlan: {
+    [key: string]: string[];
+  };
+  dietPlan: {
+    guidelines: string[];
+    calories: string;
+    macros: string;
+  };
+  exercisePlan: {
+    routines: string[];
+    frequency: string;
+  };
+  lifestyleChanges: string[];
+  trackingTips: string[];
+  tipsForSuccess: string[];
+  potentialChallenges: string[];
 }
 
 // ==================== HEALTH CHAT ====================
@@ -370,16 +402,28 @@ Respond with ONLY the JSON object, no markdown formatting or explanation.`;
 // ==================== HEALTH ASSESSMENT ====================
 
 export async function calculateHealthScores(
-  healthProfile: HealthProfile
+  healthProfile: HealthProfile,
+  metrics: any[] = []
 ): Promise<HealthScores> {
   const model = getModel('gemini-2.5-flash');
 
   const profileContext = formatHealthProfile(healthProfile);
 
+  // Format recent metrics for context
+  const metricsContext = metrics.length > 0
+    ? `\nRECENT HEALTH METRICS:\n${metrics.slice(0, 5).map(m =>
+      `- ${format(new Date(m.date), 'MM/dd')}: ${Object.entries(m)
+        .filter(([k, v]) => ['weight', 'bloodPressure', 'heartRate', 'bloodSugar', 'sleepHours', 'stepsCount'].includes(k) && v !== null)
+        .map(([k, v]) => `${k}=${v}`).join(', ')}`
+    ).join('\n')}`
+    : '\nNo recent health metrics recorded.';
+
   const prompt = `${SYSTEM_PROMPTS.healthAssessment}
 
 USER'S HEALTH PROFILE:
 ${profileContext}
+
+${metricsContext}
 
 Calculate comprehensive health scores and respond with ONLY a valid JSON object matching this schema:
 ${JSON.stringify(JSON_SCHEMAS.healthScores, null, 2)}
@@ -404,11 +448,80 @@ Respond with ONLY the JSON object, no markdown formatting or explanation.`;
       cleanJson = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     }
 
-    return JSON.parse(cleanJson) as HealthScores;
+    const scores = JSON.parse(cleanJson) as HealthScores;
+
+    // Validate scores - if any are 0, use deterministic fallback
+    if (scores.overall.score === 0 || scores.bmi.score === 0) {
+      console.log("AI returned 0 scores, using deterministic fallback");
+      return calculateDeterministicScores(healthProfile);
+    }
+
+    return scores;
   } catch (error) {
     console.error('Health scores calculation error:', error);
-    throw new Error(`Failed to calculate health scores: ${error instanceof Error ? error.message : String(error)}`);
+    // Fallback to deterministic calculation
+    return calculateDeterministicScores(healthProfile);
   }
+}
+
+// Fallback function for deterministic score calculation
+function calculateDeterministicScores(profile: HealthProfile): HealthScores {
+  // BMI Calculation
+  let bmiScore = 50;
+  let bmiCategory = "Fair";
+  let bmiValue = 0;
+
+  if (profile.height && profile.weight) {
+    bmiValue = profile.weight / Math.pow(profile.height / 100, 2);
+    // Ideal BMI 18.5-24.9
+    const diff = Math.abs(bmiValue - 21.7); // Distance from middle of healthy range
+    bmiScore = Math.max(0, Math.min(100, 100 - (diff * 2)));
+    if (bmiScore >= 80) bmiCategory = "Excellent";
+    else if (bmiScore >= 60) bmiCategory = "Good";
+    else if (bmiScore >= 40) bmiCategory = "Fair";
+    else bmiCategory = "Poor";
+  }
+
+  // Activity
+  const activityMap: Record<string, number> = {
+    'SEDENTARY': 30, 'LIGHTLY_ACTIVE': 50, 'MODERATELY_ACTIVE': 70,
+    'VERY_ACTIVE': 90, 'EXTREMELY_ACTIVE': 95
+  };
+  const activityScore = profile.activityLevel ? (activityMap[profile.activityLevel] || 50) : 50;
+
+  // Sleep
+  const sleepMap: Record<string, number> = {
+    'POOR': 30, 'FAIR': 50, 'GOOD': 75, 'EXCELLENT': 95
+  };
+  const sleepScore = profile.sleepQuality ? (sleepMap[profile.sleepQuality] || 50) : 50;
+
+  // Stress (Inverse)
+  const stressMap: Record<string, number> = {
+    'LOW': 90, 'MODERATE': 70, 'HIGH': 40, 'VERY_HIGH': 20
+  };
+  const stressScore = profile.stressLevel ? (stressMap[profile.stressLevel] || 50) : 50;
+
+  // Overall
+  const overallScore = Math.round((bmiScore + activityScore + sleepScore + stressScore) / 4);
+
+  return {
+    bmi: { value: Math.round(bmiValue * 10) / 10, score: Math.round(bmiScore), category: bmiCategory, recommendation: "Maintain a balanced diet and regular exercise." },
+    activity: { score: activityScore, category: activityScore > 70 ? "Good" : "Fair", recommendation: "Aim for 150 minutes of moderate activity per week." },
+    sleep: { score: sleepScore, category: sleepScore > 70 ? "Good" : "Fair", recommendation: "Stick to a consistent sleep schedule." },
+    stress: { score: stressScore, category: stressScore > 60 ? "Good" : "Fair", recommendation: "Practice mindfulness and stress reduction techniques." },
+    nutrition: { score: 50, category: "Fair", recommendation: "Focus on a balanced diet with more whole foods." },
+    overall: { score: overallScore, category: overallScore > 70 ? "Good" : "Fair", summary: "Your overall health assessment based on your profile." },
+    riskFactors: ["Check with a healthcare provider for personalized advice."],
+    strengths: ["Taking proactive steps to monitor health."],
+    recommendations: [
+      {
+        title: "Complete Health Profile",
+        description: "Fill out all profile details for a more accurate assessment.",
+        priority: "high"
+      }
+    ],
+    goalSuggestions: ["General Wellness", "Better Sleep"]
+  };
 }
 
 // ==================== DISEASE MANAGEMENT ====================
@@ -460,7 +573,7 @@ export async function generateGoalPlan(
   healthProfile: HealthProfile | null,
   goal: string,
   duration: string = '4 weeks'
-): Promise<string> {
+): Promise<GoalPlan> {
   const model = getModel('gemini-2.5-flash');
 
   const profileContext = formatHealthProfile(healthProfile);
@@ -473,28 +586,21 @@ ${profileContext}
 GOAL: ${goal}
 DURATION: ${duration}
 
-Create a comprehensive plan including:
-1. Weekly overview with milestones
-2. Diet recommendations
-3. Exercise schedule
-4. Yoga/stretching routine
-5. Lifestyle tips
-6. Progress tracking methods
-7. Motivation and mindset tips
+Generate a comprehensive plan and respond with ONLY a valid JSON object matching this schema:
+${JSON.stringify(JSON_SCHEMAS.goalPlan, null, 2)}
 
-Make the plan realistic and achievable based on their current fitness level and health conditions.`;
+Respond with ONLY the JSON object, no markdown formatting or explanation.`;
 
   try {
     const result = await model.generateContent(prompt);
 
-    let response = result.response.text();
-
-    // Add disclaimer for health-related goals
-    if (['weight', 'muscle', 'fitness', 'recovery'].some(k => goal.toLowerCase().includes(k))) {
-      response += RESPONSE_TEMPLATES.medicalDisclaimer;
+    const responseText = result.response.text().trim();
+    let cleanJson = responseText;
+    if (responseText.startsWith('```')) {
+      cleanJson = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     }
 
-    return response;
+    return JSON.parse(cleanJson) as GoalPlan;
   } catch (error) {
     console.error('Goal plan generation error:', error);
     throw new Error(`Failed to generate goal plan: ${error instanceof Error ? error.message : String(error)}`);

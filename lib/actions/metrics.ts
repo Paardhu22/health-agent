@@ -87,7 +87,7 @@ export async function getHealthMetrics(
     }
 
     const where: any = { userId: user.id };
-    
+
     if (range === 'week') {
       where.date = { gte: subDays(new Date(), 7) };
     } else if (range === 'month') {
@@ -101,7 +101,7 @@ export async function getHealthMetrics(
 
     // Transform metrics to type-based format
     const transformedMetrics: any[] = [];
-    
+
     const fieldMapping: Record<string, { type: string }> = {
       'weight': { type: 'WEIGHT' },
       'bloodPressureSystolic': { type: 'BLOOD_PRESSURE_SYS' },
@@ -148,9 +148,9 @@ export async function calculateHealthAssessment(): Promise<MetricsActionResult> 
     });
 
     if (!healthProfile) {
-      return { 
-        success: false, 
-        error: 'Please complete your health profile first' 
+      return {
+        success: false,
+        error: 'Please complete your health profile first'
       };
     }
 
@@ -164,7 +164,7 @@ export async function calculateHealthAssessment(): Promise<MetricsActionResult> 
     });
 
     // Calculate health scores using AI
-    const assessment = await calculateHealthScores(healthProfile);
+    const assessment = await calculateHealthScores(healthProfile, recentMetrics);
 
     return { success: true, data: assessment };
   } catch (error) {
@@ -243,7 +243,7 @@ export async function getMetricsSummary(): Promise<MetricsActionResult> {
 
     // Calculate averages
     const recentMetrics = metrics.filter((m: any) => m.date >= sevenDaysAgo);
-    
+
     const summary = {
       totalEntries: metrics.length,
       recentEntries: recentMetrics.length,

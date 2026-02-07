@@ -208,14 +208,14 @@ export async function getGoalRecommendation(
         type: 'GOAL_BASED',
         category: goal,
         title: `${goal} Plan`,
-        content: { plan, duration } as any,
+        content: plan as any,
         basedOnProfile: !!healthProfile,
         basedOnGoal: goalEnum,
       },
     });
 
     revalidatePath('/recommendations');
-    return { success: true, data: { plan } };
+    return { success: true, data: plan };
   } catch (error) {
     console.error('Goal recommendation error:', error);
     return { success: false, error: `Failed to generate goal plan: ${error instanceof Error ? error.message : String(error)}` };

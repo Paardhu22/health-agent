@@ -13,12 +13,37 @@ interface HeaderProps {
   user: {
     name: string;
     email: string;
+    healthProfile?: {
+      isComplete: boolean;
+    } | null;
   };
 }
 
 export function Header({ user }: HeaderProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Derive notifications
+  const notifications = [
+    {
+      id: 1,
+      title: 'Welcome to Health Agent',
+      message: 'Start by completing your health profile.',
+      time: 'Just now',
+      read: false,
+    },
+  ];
+
+  if (!user.healthProfile?.isComplete) {
+    notifications.unshift({
+      id: 0,
+      title: 'Complete your profile',
+      message: 'Your health profile is incomplete. Complete it now to get personalized recommendations.',
+      time: 'Action Required',
+      read: false,
+    });
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-health-card border-b border-health-border">
@@ -50,10 +75,60 @@ export function Header({ user }: HeaderProps) {
         {/* Right Side */}
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <button className="relative p-2 text-health-muted hover:text-health-text">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 text-health-muted hover:text-health-text"
+            >
+              <Bell className="w-5 h-5" />
+              {notifications.some(n => !n.read) && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </button>
+
+            {showNotifications && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowNotifications(false)}
+                />
+                <div className="absolute right-0 mt-2 w-80 bg-health-card rounded-xl shadow-lg border border-health-border z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-health-border flex items-center justify-between">
+                    <h3 className="font-semibold text-health-text">Notifications</h3>
+                    <span className="text-xs text-primary-500 font-medium">{notifications.length} New</span>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-health-muted text-sm">
+                        No new notifications
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className="p-4 hover:bg-health-muted/5 transition-colors border-b border-health-border last:border-0"
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="text-sm font-medium text-health-text">{notification.title}</h4>
+                            <span className="text-[10px] text-health-muted">{notification.time}</span>
+                          </div>
+                          <p className="text-xs text-health-muted">{notification.message}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="p-2 border-t border-health-border bg-health-muted/5">
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="w-full text-center text-xs text-primary-500 font-medium hover:text-primary-600 py-1"
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* User Menu */}
           <div className="relative">

@@ -211,15 +211,20 @@ AVAILABLE GOALS:
 - Stress reduction
 - Better sleep
 
-PLAN STRUCTURE:
-- Weekly overview
-- Daily breakdown
-- Diet recommendations
-- Exercise plan
-- Yoga/stretching routine
-- Lifestyle tips
-- Progress tracking suggestions
-- Realistic timeline expectations
+Create a comprehensive plan and respond with ONLY a valid JSON object matching the goalPlan schema.
+
+PLAN COMPONENTS TO INCLUDE IN JSON:
+- goalName: Specific name of the goal
+- overview: Brief summary of the plan
+- timeline: Expected timeline (e.g. "4 weeks")
+- milestones: Key milestones to hit
+- weeklyPlan: Daily focus for a typical week
+- dietPlan: Dietary guidelines and changes
+- exercisePlan: Exercise routine overview
+- lifestyleChanges: Habits to adopt
+- trackingTips: How to measure progress
+- tipsForSuccess: Motivation and advice
+- potentialChallenges: Obstacles and solutions
 
 Consider user's current fitness level, time availability, and any health conditions.`,
 
@@ -234,10 +239,17 @@ ASSESSMENT AREAS:
 5. Overall Health Score (weighted average)
 
 SCORING GUIDELINES:
-- Score range: 0-100
+- Score range: 0-100 (Default to 50 if information is missing, DO NOT RETURN 0)
 - Provide category (Poor/Fair/Good/Excellent)
 - Give actionable improvement suggestions
-- Be encouraging while honest about areas needing improvement`,
+- Be encouraging while honest about areas needing improvement
+- If specific data (like sleep) is missing from profile, infer from general health or assign a neutral score (50).
+
+ADDITIONAL OUTPUTS:
+- riskFactors: List of potential health risks based on capabilities
+- strengths: List of positive health indicators
+- recommendations: List of priority recommendations (title, description, priority)
+- goalSuggestions: List of suggested health goals`,
 
   // Profile Questions
   profileQuestions: `You are gathering health profile information through intelligent follow-up questions.
@@ -430,6 +442,14 @@ export const JSON_SCHEMAS = {
           recommendation: { type: 'string' },
         },
       },
+      nutrition: {
+        type: 'object',
+        properties: {
+          score: { type: 'number' },
+          category: { type: 'string' },
+          recommendation: { type: 'string' },
+        },
+      },
       overall: {
         type: 'object',
         properties: {
@@ -438,6 +458,71 @@ export const JSON_SCHEMAS = {
           summary: { type: 'string' },
         },
       },
+      riskFactors: { type: 'array', items: { type: 'string' } },
+      strengths: { type: 'array', items: { type: 'string' } },
+      goalSuggestions: { type: 'array', items: { type: 'string' } },
+      recommendations: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            description: { type: 'string' },
+            priority: { type: 'string' },
+          }
+        }
+      },
+    },
+  },
+
+  goalPlan: {
+    type: 'object',
+    properties: {
+      goalName: { type: 'string' },
+      overview: { type: 'string' },
+      timeline: { type: 'string' },
+      milestones: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            description: { type: 'string' },
+            timeframe: { type: 'string' },
+          },
+        },
+      },
+      weeklyPlan: {
+        type: 'object',
+        properties: {
+          monday: { type: 'array', items: { type: 'string' } },
+          tuesday: { type: 'array', items: { type: 'string' } },
+          wednesday: { type: 'array', items: { type: 'string' } },
+          thursday: { type: 'array', items: { type: 'string' } },
+          friday: { type: 'array', items: { type: 'string' } },
+          saturday: { type: 'array', items: { type: 'string' } },
+          sunday: { type: 'array', items: { type: 'string' } },
+        },
+      },
+      dietPlan: {
+        type: 'object',
+        properties: {
+          guidelines: { type: 'array', items: { type: 'string' } },
+          calories: { type: 'string' },
+          macros: { type: 'string' },
+        },
+      },
+      exercisePlan: {
+        type: 'object',
+        properties: {
+          routines: { type: 'array', items: { type: 'string' } },
+          frequency: { type: 'string' },
+        },
+      },
+      lifestyleChanges: { type: 'array', items: { type: 'string' } },
+      trackingTips: { type: 'array', items: { type: 'string' } },
+      tipsForSuccess: { type: 'array', items: { type: 'string' } },
+      potentialChallenges: { type: 'array', items: { type: 'string' } },
     },
   },
 };

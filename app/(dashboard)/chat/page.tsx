@@ -3,8 +3,8 @@
 // Health Chat Page
 
 import { useState, useRef, useEffect } from 'react';
-import { sendChatMessage, getChatHistory, getChatSessions } from '@/lib/actions/chat';
-import { Send, Loader2, Bot, User, Plus, MessageCircle, Trash2, AlertCircle } from 'lucide-react';
+import { sendChatMessage, getChatHistory, getChatSessions, deleteChatSession } from '@/lib/actions/chat';
+import { Send, Loader2, Bot, User, Plus, MessageCircle, Trash2, AlertCircle, Download, FileText } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { cn } from '@/lib/utils';
 
@@ -125,6 +125,33 @@ export default function ChatPage() {
     }
   }
 
+  const handleExport = () => {
+    if (messages.length === 0) return;
+
+    const chatContent = messages.map(m => `[${m.role.toUpperCase()}] ${m.createdAt.toLocaleString()}\n${m.content}\n`).join('\n---\n');
+    const blob = new Blob([chatContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `health-chat-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = async () => {
+    if (!sessionId) return;
+
+    if (confirm('Are you sure you want to delete this conversation?')) {
+      const result = await deleteChatSession(sessionId);
+      if (result.success) {
+        startNewChat();
+        loadSessions();
+      }
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)] lg:h-[calc(100vh-6rem)] flex gap-6 pb-20 lg:pb-0">
       {/* Chat Sessions Sidebar (Desktop) */}
@@ -182,6 +209,26 @@ export default function ChatPage() {
               <h1 className="font-semibold text-health-text">Health Assistant</h1>
               <p className="text-sm text-health-muted">Ask me anything about health & wellness</p>
             </div>
+          </div>
+          <div className="flex gap-2">
+            {messages.length > 0 && (
+              <button
+                onClick={handleExport}
+                className="p-2 text-health-muted hover:text-health-text hover:bg-white/5 rounded-lg transition-colors"
+                title="Export Chat"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            )}
+            {sessionId && (
+              <button
+                onClick={handleDelete}
+                className="p-2 text-health-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                title="Delete Chat"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 

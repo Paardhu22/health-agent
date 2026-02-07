@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { ProfileAlert } from '@/components/dashboard/ProfileAlert';
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({
   children,
@@ -10,9 +13,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  
+
   if (!user) {
-    redirect('/login');
+    redirect('/login?source=layout');
   }
 
   return (
@@ -20,6 +23,10 @@ export default async function DashboardLayout({
       <Sidebar user={user} />
       <div className="lg:pl-64">
         <Header user={user} />
+        <ProfileAlert
+          isComplete={!!user.healthProfile?.isComplete}
+          completionStep={user.healthProfile?.completionStep || 0}
+        />
         <main className="p-6">
           {children}
         </main>
