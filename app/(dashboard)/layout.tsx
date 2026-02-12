@@ -20,7 +20,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-health-bg">
-      <Sidebar user={user} />
+      <Sidebar user={user as any} />
       <div className="lg:pl-64">
         <Header user={user} />
         <ProfileAlert

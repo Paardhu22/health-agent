@@ -1,9 +1,6 @@
-'use client';
-
-// Workout View Component
-// Refactored from original ExercisePage
-
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { saveWorkoutSession } from '@/lib/actions/exercise';
 import { getExerciseRecommendation } from '@/lib/actions/recommendations';
 import {
     Dumbbell,
@@ -19,7 +16,9 @@ import {
     Play,
     CheckCircle2,
     Target,
-    Printer
+    Printer,
+    Save,
+    Star
 } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { cn } from '@/lib/utils';
@@ -43,7 +42,12 @@ const FITNESS_LEVELS = [
 ];
 
 export function WorkoutView() {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSummary, setShowSummary] = useState(false);
+    const [difficulty, setDifficulty] = useState<'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH'>('MODERATE');
+    const [notes, setNotes] = useState('');
     const [exercisePlan, setExercisePlan] = useState<any>(null);
     const [selectedBodyPart, setSelectedBodyPart] = useState('full_body');
     const [fitnessLevel, setFitnessLevel] = useState('intermediate');
@@ -51,10 +55,42 @@ export function WorkoutView() {
     const [error, setError] = useState<string | null>(null);
     const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
 
+    async function handleSaveSession() {
+        if (!exercisePlan) return;
+
+        setIsSaving(true);
+        try {
+            const result = await saveWorkoutSession({
+                activityType: 'EXERCISE',
+                duration: parseInt(exercisePlan.totalDuration) || 45,
+                title: `${selectedBodyPart === 'full_body' ? 'Full Body' : selectedBodyPart.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Workout`,
+                difficulty,
+                notes,
+                exercises: {
+                    completed: Array.from(completedExercises),
+                    total: exercisePlan.exercises?.length || 0,
+                    plan: exercisePlan
+                }
+            });
+
+            if (result.success) {
+                router.push('/exercise?tab=history');
+            } else {
+                setError('Failed to save session');
+            }
+        } catch (err) {
+            console.error(err);
+            setError('An error occurred while saving');
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
     async function generateExercisePlan() {
         setIsLoading(true);
         setError(null);
         setCompletedExercises(new Set());
+        setShowSummary(false);
 
         const bodyPart = selectedBodyPart === 'full_body' ? undefined : selectedBodyPart;
         const request = specificRequest
@@ -84,6 +120,97 @@ export function WorkoutView() {
 
     function handlePrint() {
         window.print();
+    }
+
+    if (showSummary && exercisePlan) {
+        return (
+            <div className="max-w-2xl mx-auto animate-fadeIn">
+                <div className="card p-6">
+                    <h2 className="text-2xl font-bold text-health-text mb-6">Session Summary</h2>
+
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="p-4 rounded-lg bg-white/5 text-center">
+                                <Clock className="w-6 h-6 mx-auto mb-2 text-blue-400" />
+                                <div className="text-2xl font-bold">{exercisePlan.totalDuration || '45'}</div>
+                                <div className="text-xs text-health-muted">Minutes</div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-white/5 text-center">
+                                <Target className="w-6 h-6 mx-auto mb-2 text-primary-400" />
+                                <div className="text-2xl font-bold">{completedExercises.size}</div>
+                                <div className="text-xs text-health-muted">Exercises Completed</div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-white/5 text-center">
+                                <Flame className="w-6 h-6 mx-auto mb-2 text-orange-400" />
+                                <div className="text-2xl font-bold">{exercisePlan.estimatedCalories || '300'}</div>
+                                <div className="text-xs text-health-muted">Calories</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-health-text mb-3">
+                                How was the intensity?
+                            </label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {['LOW', 'MODERATE', 'HIGH', 'VERY_HIGH'].map((level) => (
+                                    <button
+                                        key={level}
+                                        onClick={() => setDifficulty(level as any)}
+                                        className={cn(
+                                            "p-3 rounded-lg text-sm font-medium transition-all border",
+                                            difficulty === level
+                                                ? "bg-primary-600 border-primary-600 text-white"
+                                                : "bg-white/5 border-white/10 text-health-text hover:bg-white/10"
+                                        )}
+                                    >
+                                        {level.replace('_', ' ')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-health-text mb-2">
+                                Notes (optional)
+                            </label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="How did you feel? Any pain or breakthroughs?"
+                                className="textarea w-full"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                            <button
+                                onClick={() => setShowSummary(false)}
+                                className="px-4 py-2 rounded-lg text-health-text hover:bg-white/5 transition-colors"
+                            >
+                                Back
+                            </button>
+                            <GradientButton
+                                onClick={handleSaveSession}
+                                disabled={isSaving}
+                                className="flex-1"
+                            >
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Save Session
+                                    </>
+                                )}
+                            </GradientButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -177,14 +304,23 @@ export function WorkoutView() {
                     </GradientButton>
 
                     {exercisePlan && (
-                        <button
-                            onClick={handlePrint}
-                            className="btn-secondary"
-                            title="Print Plan"
-                        >
-                            <Printer className="w-4 h-4 mr-2" />
-                            Print
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setShowSummary(true)}
+                                className="btn-secondary bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
+                            >
+                                <Save className="w-4 h-4 mr-2" />
+                                Finish
+                            </button>
+                            <button
+                                onClick={handlePrint}
+                                className="btn-secondary"
+                                title="Print Plan"
+                            >
+                                <Printer className="w-4 h-4 mr-2" />
+                                Print
+                            </button>
+                        </>
                     )}
                 </div>
 

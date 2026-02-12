@@ -4,7 +4,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { hashPassword, verifyPassword, createSession, destroySession } from '@/lib/auth';
+import { hashPassword, verifyPassword, createSession, destroySession, getCurrentUser } from '@/lib/auth';
 
 // ==================== VALIDATION SCHEMAS ====================
 
@@ -13,6 +13,7 @@ const signUpSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
+  role: z.enum(['PATIENT', 'DOCTOR', 'YOGA_INSTRUCTOR']).optional(),
 }).refine((data: { password: string; confirmPassword: string }) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -29,9 +30,9 @@ export interface AuthActionResult {
   success: boolean;
   error?: string;
   fieldErrors?: Record<string, string[]>;
+  role?: string;
 }
 
-// ==================== SIGN UP ====================
 
 export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const rawData = {
@@ -39,48 +40,70 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     confirmPassword: formData.get('confirmPassword') as string,
+    role: (formData.get('role') as any) || 'PATIENT',
   };
-  
+
   // Validate input
   const validationResult = signUpSchema.safeParse(rawData);
-  
+
   if (!validationResult.success) {
     return {
       success: false,
       fieldErrors: validationResult.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
-  
-  const { name, email, password } = validationResult.data;
-  
+
+  const { name, email, password, role } = validationResult.data;
+
   try {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
-    
+
     if (existingUser) {
       return {
         success: false,
         error: 'An account with this email already exists',
       };
     }
-    
+
     // Hash password
     const hashedPassword = await hashPassword(password);
-    
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email: email.toLowerCase(),
-        password: hashedPassword,
-      },
+
+    // Create user with transaction to ensure doctor profile is created if needed
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          role: role || 'PATIENT',
+        },
+      });
+
+      // If role is DOCTOR or YOGA_INSTRUCTOR, create a doctor profile
+      if (role === 'DOCTOR' || role === 'YOGA_INSTRUCTOR') {
+        await tx.doctor.create({
+          data: {
+            userId: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            specialization: role === 'YOGA_INSTRUCTOR' ? 'Yoga Instructor' : 'General Practitioner', // Default, can be updated later
+            qualification: 'Pending Verification',
+            experience: 0,
+            consultationFee: 0,
+            isActive: true, // Auto-activate for now, maybe require verify later
+          },
+        });
+      }
+
+      return newUser;
     });
-    
-    // Create session
-    await createSession(user.id, user.email, user.name);
-    
+
+    // Create session (now might include role if we update createSession, but basic session is fine)
+    await createSession(user.id, user.email, user.name, user.role);
+
     return { success: true };
   } catch (error) {
     console.error('Sign up error:', error);
@@ -98,46 +121,46 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   };
-  
+
   // Validate input
   const validationResult = signInSchema.safeParse(rawData);
-  
+
   if (!validationResult.success) {
     return {
       success: false,
       fieldErrors: validationResult.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
-  
+
   const { email, password } = validationResult.data;
-  
+
   try {
     // Find user
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
-    
+
     if (!user) {
       return {
         success: false,
         error: 'Invalid email or password',
       };
     }
-    
+
     // Verify password
     const isValidPassword = await verifyPassword(password, user.password);
-    
+
     if (!isValidPassword) {
       return {
         success: false,
         error: 'Invalid email or password',
       };
     }
-    
+
     // Create session
-    await createSession(user.id, user.email, user.name);
-    
-    return { success: true };
+    await createSession(user.id, user.email, user.name, user.role);
+
+    return { success: true, role: user.role };
   } catch (error) {
     console.error('Sign in error:', error);
     return {
@@ -156,3 +179,7 @@ export async function signOut(): Promise<void> {
 
 // Alias for signOut (used by settings page)
 export const logout = signOut;
+
+export async function getUser() {
+  return await getCurrentUser();
+}

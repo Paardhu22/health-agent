@@ -24,6 +24,7 @@ interface TokenPayload extends JWTPayload {
   userId: string;
   email: string;
   name: string;
+  role: string;
 }
 
 export async function createToken(payload: TokenPayload): Promise<string> {
@@ -45,8 +46,8 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
 
 // ==================== SESSION MANAGEMENT ====================
 
-export async function createSession(userId: string, email: string, name: string): Promise<string> {
-  const token = await createToken({ userId, email, name });
+export async function createSession(userId: string, email: string, name: string, role: string = 'PATIENT'): Promise<string> {
+  const token = await createToken({ userId, email, name, role });
 
   // Calculate expiry date
   const expiresAt = new Date();

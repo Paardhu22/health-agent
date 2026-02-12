@@ -8,6 +8,9 @@ import { signOut } from '@/lib/actions/auth';
 import { getInitials } from '@/lib/utils';
 import { Bell, Menu, X, ChevronDown, User, Settings, LogOut, Heart } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
+import { useRouter } from 'next/navigation';
+import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '@/lib/actions/notification';
+import { Notification } from '@prisma/client';
 
 interface HeaderProps {
   user: {
@@ -20,69 +23,89 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
+  const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Welcome to Health Agent',
-      message: 'Start by completing your health profile.',
-      time: 'Just now',
-      read: false,
-    },
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchNotifications = async () => {
+    const result = await getNotifications();
+    if (result.success && result.data) {
+      setNotifications(prev => {
+        // Keep local profile notification if it exists
+        const local = prev.find(n => n.id === 'local-profile');
+        const serverNotifications = result.data.map((n: any) => ({
+          ...n,
+          time: new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: n.isRead
+        }));
+
+        // Combine local and server
+        return local ? [local, ...serverNotifications] : serverNotifications;
+      });
+
+      const unread = result.data.filter((n: any) => !n.isRead).length;
+      setUnreadCount(unread);
+    }
+  };
 
   useEffect(() => {
+    // Initial fetch
+    fetchNotifications();
+
+    // Check for profile completion
     if (user && !user.healthProfile?.isComplete) {
       setNotifications(prev => {
-        if (prev.find(n => n.id === 0)) return prev;
+        if (prev.find(n => n.id === 'local-profile')) return prev;
         return [{
-          id: 0,
+          id: 'local-profile',
           title: 'Complete your profile',
           message: 'Your health profile is incomplete. Complete it now to get personalized recommendations.',
           time: 'Action Required',
           read: false,
+          type: 'WARNING',
         }, ...prev];
       });
+      setUnreadCount(prev => prev + 1);
     }
+
+    // Poll for notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
   }, [user]);
 
-  const markAllAsRead = () => {
-    setNotifications([]);
-    setShowNotifications(false);
+  const handleMarkAllAsRead = async () => {
+    // Optimistic update
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+
+    await markAllNotificationsAsRead();
+    router.refresh();
+  };
+
+  const handleNotificationClick = async (notification: any) => {
+    if (!notification.read && notification.id !== 'local-profile') {
+      await markNotificationAsRead(notification.id);
+      fetchNotifications();
+    }
+
+    // Navigate if resourceId is present (simple logic for now)
+    if (notification.resourceType === 'chat' && notification.resourceId) {
+      // Ideally navigate to the specific chat, but we might just go to /chat or /doctor
+      // For now, let's just close the dropdown
+    }
   };
 
   return (
     <header className="sticky top-0 z-40 bg-health-card border-b border-health-border">
       <div className="flex h-16 items-center justify-between px-6">
-        {/* Mobile Menu Button */}
-        <button
-          type="button"
-          className="lg:hidden p-2 text-health-muted hover:text-health-text"
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-        >
-          {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-
-        {/* Mobile Logo */}
-        <div className="lg:hidden flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
-            <Heart className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-bold text-health-text">Health Agent</span>
-        </div>
-
-        {/* Search (Desktop) */}
-        <div className="hidden lg:block flex-1 max-w-md">
-          <p className="text-health-muted text-sm">
-            Welcome back, <span className="text-health-text font-medium">{user.name}</span>
-          </p>
-        </div>
+        {/* ... (Mobile Menu Button, Logo, Search) ... */}
 
         {/* Right Side */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 ml-auto">
           {/* Notifications */}
           <div className="relative">
             <button
@@ -90,7 +113,7 @@ export function Header({ user }: HeaderProps) {
               className="relative p-2 text-health-muted hover:text-health-text"
             >
               <Bell className="w-5 h-5" />
-              {notifications.some(n => !n.read) && (
+              {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               )}
             </button>
@@ -104,7 +127,7 @@ export function Header({ user }: HeaderProps) {
                 <div className="absolute right-0 mt-2 w-80 bg-health-card rounded-xl shadow-lg border border-health-border z-50 overflow-hidden">
                   <div className="px-4 py-3 border-b border-health-border flex items-center justify-between">
                     <h3 className="font-semibold text-health-text">Notifications</h3>
-                    <span className="text-xs text-primary-500 font-medium">{notifications.length} New</span>
+                    <span className="text-xs text-primary-500 font-medium">{unreadCount} New</span>
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {notifications.length === 0 ? (
@@ -115,10 +138,11 @@ export function Header({ user }: HeaderProps) {
                       notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="p-4 hover:bg-health-muted/5 transition-colors border-b border-health-border last:border-0"
+                          onClick={() => handleNotificationClick(notification)}
+                          className={`p-4 hover:bg-health-muted/5 transition-colors border-b border-health-border last:border-0 cursor-pointer ${!notification.read ? 'bg-primary-500/5' : ''}`}
                         >
                           <div className="flex justify-between items-start mb-1">
-                            <h4 className="text-sm font-medium text-health-text">{notification.title}</h4>
+                            <h4 className={`text-sm font-medium ${!notification.read ? 'text-primary-500' : 'text-health-text'}`}>{notification.title}</h4>
                             <span className="text-[10px] text-health-muted">{notification.time}</span>
                           </div>
                           <p className="text-xs text-health-muted">{notification.message}</p>
@@ -128,7 +152,7 @@ export function Header({ user }: HeaderProps) {
                   </div>
                   <div className="p-2 border-t border-health-border bg-health-muted/5">
                     <button
-                      onClick={markAllAsRead}
+                      onClick={handleMarkAllAsRead}
                       className="w-full text-center text-xs text-primary-500 font-medium hover:text-primary-600 py-1"
                     >
                       Mark all as read

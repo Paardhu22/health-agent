@@ -5,12 +5,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signUp } from '@/lib/actions/auth';
-import { Eye, EyeOff, Loader2, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Stethoscope, Flower } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState<'PATIENT' | 'DOCTOR' | 'YOGA_INSTRUCTOR'>('PATIENT');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
@@ -25,7 +26,11 @@ export default function RegisterPage() {
 
     if (result.success) {
       // Force a hard navigation to ensure cookies are sent
-      window.location.href = '/profile/setup';
+      if (role === 'PATIENT') {
+        window.location.href = '/profile/setup';
+      } else {
+        window.location.href = '/dashboard';
+      }
     } else {
       setError(result.error || 'An error occurred');
       setFieldErrors(result.fieldErrors || {});
@@ -140,6 +145,46 @@ export default function RegisterPage() {
           {fieldErrors.confirmPassword && (
             <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword[0]}</p>
           )}
+        </div>
+
+        <div>
+          <label className="label mb-2 block">I am a...</label>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={() => setRole('PATIENT')}
+              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${role === 'PATIENT'
+                  ? 'bg-primary-500/10 border-primary-500 text-primary-500'
+                  : 'bg-white/5 border-white/10 text-health-muted hover:bg-white/10'
+                }`}
+            >
+              <User className="w-6 h-6" />
+              <span className="text-xs font-medium">Patient</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('DOCTOR')}
+              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${role === 'DOCTOR'
+                  ? 'bg-blue-500/10 border-blue-500 text-blue-500'
+                  : 'bg-white/5 border-white/10 text-health-muted hover:bg-white/10'
+                }`}
+            >
+              <Stethoscope className="w-6 h-6" />
+              <span className="text-xs font-medium">Doctor</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('YOGA_INSTRUCTOR')}
+              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${role === 'YOGA_INSTRUCTOR'
+                  ? 'bg-green-500/10 border-green-500 text-green-500'
+                  : 'bg-white/5 border-white/10 text-health-muted hover:bg-white/10'
+                }`}
+            >
+              <Flower className="w-6 h-6" />
+              <span className="text-xs font-medium">Instructor</span>
+            </button>
+          </div>
+          <input type="hidden" name="role" value={role} />
         </div>
 
         <div className="flex items-start">

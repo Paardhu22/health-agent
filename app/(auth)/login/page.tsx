@@ -25,7 +25,11 @@ export default function LoginPage() {
 
     if (result.success) {
       // Force a hard navigation to ensure cookies are sent
-      window.location.href = '/dashboard';
+      if (result.role === 'DOCTOR' || result.role === 'YOGA_INSTRUCTOR') {
+        window.location.href = '/dashboard/doctor';
+      } else {
+        window.location.href = '/dashboard';
+      }
     } else {
       setError(result.error || 'An error occurred');
       setFieldErrors(result.fieldErrors || {});

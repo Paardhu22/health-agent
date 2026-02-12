@@ -26,6 +26,19 @@ export default async function DashboardPage() {
 
   if (!user) return null;
 
+  // Redirect Doctors and Yoga Instructors to their dashboard
+  if (user.role === 'DOCTOR' || user.role === 'YOGA_INSTRUCTOR') {
+    // We can't use redirect() here if it's a client component, but this is a server component.
+    // However, importing redirect from 'next/navigation' is required.
+    // It's not imported in the original file, so we need to add it or return a redirect component.
+    // The previous code had `if (!user) return null;` so it returns JSX.
+    // Let's rely on middleware or client-side redirect if possible, but server redirect is better.
+    // I check imports... 'next/link' is there. I need 'next/navigation'.
+    // Oh wait, I can just return the redirect() result which throws an error that Next.js catches.
+    const { redirect } = await import('next/navigation');
+    redirect('/doctor');
+  }
+
   // Fetch user data
   const [healthProfile, upcomingAppointments, recentMetrics, latestRecommendations] = await Promise.all([
     prisma.healthProfile.findUnique({

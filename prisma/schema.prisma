@@ -10,13 +10,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== USER & AUTH ====================
+
+enum Role {
+  PATIENT
+  DOCTOR
+  YOGA_INSTRUCTOR
+}
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   password      String    // Hashed with bcrypt
   name          String
+  role          Role      @default(PATIENT)
   avatar        String?
   emailVerified DateTime?
   createdAt     DateTime  @default(now())
@@ -29,6 +35,10 @@ model User {
   chatHistory    ChatHistory[]
   recommendations Recommendation[]
   sessions       Session[]
+  workoutSessions WorkoutSession[]
+  doctorProfile  Doctor?
+  doctorChats    DoctorPatientChat[]
+  notifications  Notification[]
 
   @@index([email])
 }
@@ -129,6 +139,7 @@ model HealthMetrics {
 
 model Doctor {
   id              String   @id @default(cuid())
+  userId          String?  @unique
   name            String
   email           String   @unique
   phone           String?
@@ -145,8 +156,10 @@ model Doctor {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   availability    DoctorAvailability[]
   appointments    Appointment[]
+  patientChats    DoctorPatientChat[]
 
   @@index([specialization])
 }
@@ -366,4 +379,102 @@ enum RecommendationFeedback {
   TOO_EASY
   TOO_HARD
   IRRELEVANT
+}
+
+// ==================== WORKOUT HISTORY ====================
+
+model WorkoutSession {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  activityType ActivityType
+  
+  // Session Data
+  duration  Int      // in minutes
+  calories  Int?
+  
+  // Content (snapshot of what was done)
+  title     String   // e.g. "Full Body Workout" or "Morning Yoga"
+  exercises Json?    // The actual exercises/poses performed and their status
+  
+  // User Input
+  difficulty IntensityLevel?
+  feeling    MoodLevel?
+  notes      String?
+  
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+}
+
+enum ActivityType {
+  YOGA
+  EXERCISE
+  OTHER
+}
+
+enum IntensityLevel {
+  LOW
+  MODERATE
+  HIGH
+  VERY_HIGH
+}
+
+
+// ==================== DOCTOR-PATIENT CHAT ====================
+
+model DoctorPatientChat {
+  id          String   @id @default(cuid())
+  doctorId    String
+  patientId   String
+  
+  senderId    String   // ID of the user who sent the message
+  content     String
+  isRead      Boolean  @default(false)
+  isDeleted   Boolean  @default(false) // For "unsend" functionality
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient     User     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, patientId])
+  @@index([createdAt])
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  
+  title       String
+  message     String
+  type        NotificationType
+  isRead      Boolean          @default(false)
+  
+  // Optional linking to other entities
+  resourceId  String?          // e.g., ID of the chat/appointment
+  resourceType String?         // "chat", "appointment", etc.
+  
+  createdAt   DateTime         @default(now())
+  
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  CHAT_MESSAGE
+  APPOINTMENT_UPDATE
 }

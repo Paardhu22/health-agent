@@ -30,6 +30,7 @@ interface SidebarProps {
   user: {
     name: string;
     email: string;
+    role: string;
     healthProfile?: {
       isComplete: boolean;
     } | null;
@@ -101,15 +102,23 @@ export function Sidebar({ user }: SidebarProps) {
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-1">
               {navigation.map((item) => {
-                // Check if active. For Yoga, we need to check the query param too if we are on client side, 
-                // but simpler approach: just check if pathname matches and we are not in yoga mode for other items.
-                // Actually, usePathname usage doesn't give query params. 
-                // We'll trust the Link to handle navigation, but for highlighting:
-                // Since we can't easily access searchParams in this server/client component without useSearchParams (which might deopt static rendering),
-                // we'll stick to simple matching or use a client hook. Sidebar is 'use client'.
-                // So we can use window.location or useSearchParams.
-                // Let's use a simpler check: if href includes 'tab=yoga', we strictly check that.
-                // But usePathname() returns just the path.
+                // Role-based filtering
+                const isDoctorOrInstructor = user.role === 'DOCTOR' || user.role === 'YOGA_INSTRUCTOR';
+
+                // Items allowed for doctors/instructors
+                const doctorAllowedItems = ['Dashboard', 'Appointments'];
+
+                if (isDoctorOrInstructor) {
+                  if (!doctorAllowedItems.includes(item.name)) {
+                    return null;
+                  }
+                  // Remap Dashboard link for doctors
+                  if (item.name === 'Dashboard') {
+                    item.href = '/doctor';
+                  }
+                }
+
+                // Check if active.
                 const tab = searchParams.get('tab');
                 let isActive = pathname === item.href;
 
@@ -120,10 +129,6 @@ export function Sidebar({ user }: SidebarProps) {
                   isActive = pathname === '/exercise' && tab !== 'yoga';
                 }
 
-                // Simplified active check for Next.js router
-                // We'll rely on the fact that when clicking "Yoga", we go to /exercise?tab=yoga.
-                // But we want the sidebar to stay highlighted. 
-                // Let's import useSearchParams.
                 return (
                   <li key={item.name}>
                     <Link

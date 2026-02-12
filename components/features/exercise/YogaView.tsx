@@ -1,31 +1,16 @@
-'use client';
-
-// Yoga View Component
-// Refactored from original YogaPage
-
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { saveWorkoutSession } from '@/lib/actions/exercise';
 import { getYogaRecommendation } from '@/lib/actions/recommendations';
-import {
-    Loader2,
-    AlertCircle,
-    RefreshCw,
-    Clock,
-    Leaf,
-    Heart,
-    Shield,
-    ChevronDown,
-    ChevronUp,
-    Play,
-    CheckCircle2,
-    Sparkles,
-    Wind,
-    Moon,
-    Sun,
-    Printer
-} from 'lucide-react';
-import { GradientButton } from '@/components/ui/gradient-button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import {
+    Loader2, AlertCircle, RefreshCw, Clock, Leaf, Heart, Shield,
+    ChevronDown, ChevronUp, Play, CheckCircle2, Sparkles, Wind,
+    Moon, Sun, Printer, Save, Star
+} from 'lucide-react';
+import { GradientButton } from '@/components/ui/gradient-button';
+
 
 const FOCUS_AREAS = [
     { id: 'stress_relief', label: 'Stress Relief', emoji: '😌', icon: Wind },
@@ -52,7 +37,12 @@ const DURATIONS = [
 ];
 
 export function YogaView() {
+    const router = useRouter(); // Initialize router inside component
     const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSummary, setShowSummary] = useState(false);
+    const [difficulty, setDifficulty] = useState<'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH'>('MODERATE');
+    const [notes, setNotes] = useState('');
     const [yogaPlan, setYogaPlan] = useState<any>(null);
     const [selectedFocus, setSelectedFocus] = useState('general');
     const [experienceLevel, setExperienceLevel] = useState('beginner');
@@ -65,6 +55,7 @@ export function YogaView() {
         setIsLoading(true);
         setError(null);
         setCompletedPoses(new Set());
+        setShowSummary(false);
 
         const focusLabel = FOCUS_AREAS.find(f => f.id === selectedFocus)?.label || 'General Wellness';
         const request = specificRequest
@@ -82,6 +73,37 @@ export function YogaView() {
         setIsLoading(false);
     }
 
+    async function handleSaveSession() {
+        if (!yogaPlan) return;
+
+        setIsSaving(true);
+        try {
+            const result = await saveWorkoutSession({
+                activityType: 'YOGA',
+                duration: parseInt(yogaPlan.totalDuration) || parseInt(duration),
+                title: `Yoga for ${FOCUS_AREAS.find(f => f.id === selectedFocus)?.label || 'Wellness'}`,
+                difficulty,
+                notes,
+                exercises: {
+                    completed: Array.from(completedPoses),
+                    total: yogaPlan.poses?.length || 0,
+                    plan: yogaPlan
+                }
+            });
+
+            if (result.success) {
+                router.push('/exercise?tab=history');
+            } else {
+                setError('Failed to save session');
+            }
+        } catch (err) {
+            console.error(err);
+            setError('An error occurred while saving');
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
     function togglePoseComplete(index: number) {
         const newSet = new Set(completedPoses);
         if (newSet.has(index)) {
@@ -94,6 +116,97 @@ export function YogaView() {
 
     function handlePrint() {
         window.print();
+    }
+
+    if (showSummary && yogaPlan) {
+        return (
+            <div className="max-w-2xl mx-auto animate-fadeIn">
+                <div className="card p-6">
+                    <h2 className="text-2xl font-bold text-health-text mb-6">Session Summary</h2>
+
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="p-4 rounded-lg bg-white/5 text-center">
+                                <Clock className="w-6 h-6 mx-auto mb-2 text-blue-400" />
+                                <div className="text-2xl font-bold">{yogaPlan.totalDuration || duration}</div>
+                                <div className="text-xs text-health-muted">Minutes</div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-white/5 text-center">
+                                <Leaf className="w-6 h-6 mx-auto mb-2 text-green-400" />
+                                <div className="text-2xl font-bold">{completedPoses.size}</div>
+                                <div className="text-xs text-health-muted">Poses Completed</div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-white/5 text-center">
+                                <Star className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
+                                <div className="text-2xl font-bold capitalize">{experienceLevel}</div>
+                                <div className="text-xs text-health-muted">Level</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-health-text mb-3">
+                                How was the intensity?
+                            </label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {['LOW', 'MODERATE', 'HIGH', 'VERY_HIGH'].map((level) => (
+                                    <button
+                                        key={level}
+                                        onClick={() => setDifficulty(level as any)}
+                                        className={cn(
+                                            "p-3 rounded-lg text-sm font-medium transition-all border",
+                                            difficulty === level
+                                                ? "bg-primary-600 border-primary-600 text-white"
+                                                : "bg-white/5 border-white/10 text-health-text hover:bg-white/10"
+                                        )}
+                                    >
+                                        {level.replace('_', ' ')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-health-text mb-2">
+                                Notes (optional)
+                            </label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="How did you feel? Any pain or breakthroughs?"
+                                className="textarea w-full"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                            <button
+                                onClick={() => setShowSummary(false)}
+                                className="px-4 py-2 rounded-lg text-health-text hover:bg-white/5 transition-colors"
+                            >
+                                Back
+                            </button>
+                            <GradientButton
+                                onClick={handleSaveSession}
+                                disabled={isSaving}
+                                className="flex-1"
+                            >
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Save Session
+                                    </>
+                                )}
+                            </GradientButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
