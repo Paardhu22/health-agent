@@ -206,6 +206,7 @@ export async function createAppointment(formData: FormData): Promise<Appointment
         originalQuery,
         extractedIntent,
         status: 'CONFIRMED',
+        meetingId: Math.random().toString(36).substring(2, 12).toUpperCase(), // Generate unique room ID
       },
       include: {
         doctor: true,
@@ -274,6 +275,64 @@ export async function cancelAppointment(appointmentId: string): Promise<Appointm
   } catch (error) {
     console.error('Cancel appointment error:', error);
     return { success: false, error: 'Failed to cancel appointment' };
+  }
+}
+
+// ==================== COMPLETE APPOINTMENT ====================
+
+export async function completeAppointment(appointmentId: string): Promise<AppointmentActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    // Check if appointment exists and involves the current user (doctor or patient)
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { doctor: true }
+    });
+
+    if (!appointment) {
+      return { success: false, error: 'Appointment not found' };
+    }
+
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { status: 'COMPLETED' },
+    });
+
+    revalidatePath('/appointments');
+    revalidatePath('/doctor');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Complete appointment error:', error);
+    return { success: false, error: 'Failed to complete appointment' };
+  }
+}
+
+// ==================== GET BY MEETING ID ====================
+
+export async function getAppointmentByMeetingId(meetingId: string): Promise<AppointmentActionResult> {
+  try {
+    const appointment = await prisma.appointment.findUnique({
+      where: { meetingId },
+      include: {
+        doctor: true,
+        user: true
+      },
+    });
+
+    if (!appointment) {
+      return { success: false, error: 'Meeting not found' };
+    }
+
+    return { success: true, data: appointment };
+  } catch (error) {
+    console.error('Get by meeting ID error:', error);
+    return { success: false, error: 'Failed to find meeting' };
   }
 }
 

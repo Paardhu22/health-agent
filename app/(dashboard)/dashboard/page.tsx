@@ -1,49 +1,32 @@
-// Dashboard Page
 import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import {
   MessageCircle,
-  Apple,
+  Clock,
+  CheckCircle2,
+  Utensils,
   Dumbbell,
-  Calendar,
-  Activity,
-  Target,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  ChevronRight,
-  Flower2,
-  Heart,
-  Moon,
-  Footprints,
+  MoveRight,
+  Activity
 } from 'lucide-react';
-import { formatDate, formatGoal, getScoreColor, getScoreBgColor } from '@/lib/utils';
-import { GradientButton } from '@/components/ui/gradient-button';
+
+import { ProfileSidebar } from '@/components/dashboard/ProfileSidebar';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
   if (!user) return null;
 
-  // Redirect Doctors and Yoga Instructors to their dashboard
+  // Redirect Doctors/Instructors
   if (user.role === 'DOCTOR' || user.role === 'YOGA_INSTRUCTOR') {
-    // We can't use redirect() here if it's a client component, but this is a server component.
-    // However, importing redirect from 'next/navigation' is required.
-    // It's not imported in the original file, so we need to add it or return a redirect component.
-    // The previous code had `if (!user) return null;` so it returns JSX.
-    // Let's rely on middleware or client-side redirect if possible, but server redirect is better.
-    // I check imports... 'next/link' is there. I need 'next/navigation'.
-    // Oh wait, I can just return the redirect() result which throws an error that Next.js catches.
     const { redirect } = await import('next/navigation');
     redirect('/doctor');
   }
 
-  // Fetch user data
-  const [healthProfile, upcomingAppointments, recentMetrics, latestRecommendations] = await Promise.all([
-    prisma.healthProfile.findUnique({
-      where: { userId: user.id },
-    }),
+  // Fetch data
+  const [healthProfile, upcomingAppointments, recentMetrics, activeRecommendations] = await Promise.all([
+    prisma.healthProfile.findUnique({ where: { userId: user.id } }),
     prisma.appointment.findMany({
       where: {
         userId: user.id,
@@ -52,12 +35,12 @@ export default async function DashboardPage() {
       },
       include: { doctor: true },
       orderBy: { scheduledDate: 'asc' },
-      take: 3,
+      take: 2,
     }),
     prisma.healthMetrics.findMany({
       where: { userId: user.id },
       orderBy: { date: 'desc' },
-      take: 7,
+      take: 1,
     }),
     prisma.recommendation.findMany({
       where: { userId: user.id, isActive: true },
@@ -66,347 +49,202 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const quickActions = [
-    { name: 'Chat with AI', href: '/chat', icon: MessageCircle, color: 'bg-primary-500/20 text-primary-400' },
-    { name: 'Diet Plan', href: '/diet', icon: Apple, color: 'bg-green-500/20 text-green-400' },
-    { name: 'Exercise', href: '/exercise', icon: Dumbbell, color: 'bg-blue-500/20 text-blue-400' },
-    { name: 'Yoga', href: '/yoga', icon: Flower2, color: 'bg-purple-500/20 text-purple-400' },
-    { name: 'Book Appointment', href: '/appointments', icon: Calendar, color: 'bg-orange-500/20 text-orange-400' },
-    { name: 'Track Metrics', href: '/metrics', icon: Activity, color: 'bg-pink-500/20 text-pink-400' },
-  ];
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const timeOfDay = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
+
+  // Calculate Focus Metric (Fallback to 0 if incomplete)
+  const healthScore = healthProfile?.overallHealthScore || 0;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-20 lg:pb-6">
-      {/* Welcome Section */}
-      <div className="card bg-gradient-to-r from-primary-600 to-primary-700">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="text-white">
-            <h1 className="text-2xl font-bold mb-1">Welcome back, {user.name.split(' ')[0]}!</h1>
-            <p className="text-primary-100">
-              {healthProfile?.isComplete
-                ? 'Your personalized health dashboard is ready'
-                : 'Complete your health profile for personalized recommendations'}
-            </p>
-          </div>
-          {!healthProfile?.isComplete && (
-            <GradientButton asChild className="bg-white text-primary-700 hover:bg-primary-50">
-              <Link href="/profile/setup">
-                Complete Profile
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Link>
-            </GradientButton>
-          )}
-        </div>
-      </div>
+    <div className="relative pb-24">
+      {/* 2-Column Grid Layout */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
 
-      {/* Health Scores */}
-      {healthProfile?.isComplete && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <ScoreCard
-            icon={<Heart className="w-5 h-5" />}
-            label="Overall Health"
-            score={healthProfile.overallHealthScore || 0}
-            color="primary"
-          />
-          <ScoreCard
-            icon={<Activity className="w-5 h-5" />}
-            label="Activity"
-            score={healthProfile.activityScore || 0}
-            color="blue"
-          />
-          <ScoreCard
-            icon={<Moon className="w-5 h-5" />}
-            label="Sleep"
-            score={healthProfile.sleepScore || 0}
-            color="purple"
-          />
-          <ScoreCard
-            icon={<Target className="w-5 h-5" />}
-            label="Stress"
-            score={healthProfile.stressScore || 0}
-            color="orange"
-          />
-        </div>
-      )}
+        {/* Left Column: Feed (Span 2) */}
+        <div className="lg:col-span-2 space-y-12">
 
-      {/* Quick Actions */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-health-text mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-          {quickActions.map((action) => (
-            <Link
-              key={action.name}
-              href={action.href}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-health-muted/10 transition-colors"
-            >
-              <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center`}>
-                <action.icon className="w-6 h-6" />
-              </div>
-              <span className="text-sm text-health-text text-center">{action.name}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Health Profile Summary */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-health-text">Health Profile</h2>
-            <Link href="/profile" className="text-sm text-primary-600 hover:text-primary-700">
-              Edit Profile
-            </Link>
-          </div>
-
-          {healthProfile ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {healthProfile.age && (
-                  <ProfileItem label="Age" value={`${healthProfile.age} years`} />
-                )}
-                {healthProfile.gender && (
-                  <ProfileItem label="Gender" value={healthProfile.gender.toLowerCase()} />
-                )}
-                {healthProfile.height && healthProfile.weight && (
-                  <>
-                    <ProfileItem label="Height" value={`${healthProfile.height} cm`} />
-                    <ProfileItem label="Weight" value={`${healthProfile.weight} kg`} />
-                  </>
-                )}
-              </div>
-
-              {healthProfile.primaryGoal && (
-                <div className="pt-4 border-t border-health-border">
-                  <p className="text-sm text-health-muted mb-1">Primary Goal</p>
-                  <p className="font-medium text-health-text">{formatGoal(healthProfile.primaryGoal)}</p>
-                </div>
-              )}
-
-              {healthProfile.existingConditions && healthProfile.existingConditions.length > 0 && (
-                <div className="pt-4 border-t border-health-border">
-                  <p className="text-sm text-health-muted mb-2">Health Conditions</p>
-                  <div className="flex flex-wrap gap-2">
-                    {healthProfile.existingConditions.map((condition) => (
-                      <span key={condition} className="badge badge-info">
-                        {condition}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* 1. Header & AI Input */}
+          <div className="space-y-6">
+            <div>
+              <p className="text-zinc-500 font-medium text-sm uppercase tracking-wider mb-1">{today}</p>
+              <h1 className="text-3xl font-light text-health-text">
+                {timeOfDay}, <span className="font-semibold">{user.name.split(' ')[0]}</span>.
+              </h1>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-health-muted mb-4">No health profile yet</p>
-              <GradientButton asChild>
-                <Link href="/profile/setup">
-                  Create Profile
-                </Link>
-              </GradientButton>
-            </div>
-          )}
-        </div>
 
-        {/* Upcoming Appointments */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-health-text">Upcoming Appointments</h2>
-            <Link href="/appointments" className="text-sm text-primary-600 hover:text-primary-700">
-              View All
+            {/* Minimalist AI Input Trigger */}
+            <Link href="/chat" className="block group">
+              <div className="bg-white/5 border border-zinc-200/20 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between hover:border-primary-500/50 transition-all shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <MessageCircle className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <span className="text-zinc-400 font-light">How are you feeling today?</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-primary-500 group-hover:text-white transition-colors">
+                  <MoveRight className="w-4 h-4" />
+                </div>
+              </div>
             </Link>
           </div>
 
-          {upcomingAppointments.length > 0 ? (
-            <div className="space-y-3">
-              {upcomingAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-health-muted/10"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary-500/20 text-primary-400 flex items-center justify-center">
-                    <Calendar className="w-6 h-6" />
+          {/* 2. Focus Metrics (Row) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex flex-col justify-between h-40">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-medium text-zinc-500">Daily Score</span>
+                <Activity className="w-5 h-5 text-primary-500" />
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-health-text">{Math.round(healthScore)}</div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  {healthScore > 80 ? 'Excellent' : 'Keep going'}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex flex-col justify-between h-40">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-medium text-zinc-500">Active Calories</span>
+                <Activity className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-health-text">
+                  {recentMetrics[0]?.activeCalories || 0}
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">kcal burned</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. The Feed (Timeline) */}
+          <div className="space-y-6">
+            <h2 className="text-lg font-medium text-health-text">Up Next</h2>
+
+            <div className="relative border-l-2 border-zinc-100 dark:border-zinc-800 ml-3 space-y-8 pl-8 py-2">
+
+              {/* Appointments */}
+              {upcomingAppointments.map((apt) => (
+                <div key={apt.id} className="relative">
+                  <div className="absolute -left-[41px] top-1 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 border-2 border-white dark:border-black flex items-center justify-center">
+                    <Clock className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-health-text truncate">
-                      {appointment.doctor.name}
-                    </p>
-                    <p className="text-sm text-health-muted">
-                      {formatDate(appointment.scheduledDate)} at {appointment.scheduledTime}
-                    </p>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-semibold text-blue-500 uppercase tracking-wide">
+                      {new Date(apt.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <h3 className="text-base font-medium text-health-text">{apt.doctor.name}</h3>
+                    <p className="text-sm text-zinc-500">{apt.type} Appointment</p>
                   </div>
-                  <span className={`badge ${appointment.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'
-                    }`}>
-                    {appointment.status.toLowerCase()}
-                  </span>
                 </div>
               ))}
+
+              {/* Recommendations (Diet/Exercise) - Formatting Fixed */}
+              {activeRecommendations.map((rec, i) => {
+                const { details, title } = parseRecommendation(rec.content, rec.type);
+
+                return (
+                  <div key={rec.id} className="relative">
+                    <div className={`absolute -left-[41px] top-1 w-6 h-6 rounded-full border-2 border-white dark:border-black flex items-center justify-center
+                                    ${rec.type === 'DIET' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}`}>
+                      {rec.type === 'DIET' ?
+                        <Utensils className="w-3 h-3 text-green-600 dark:text-green-400" /> :
+                        <Dumbbell className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                      }
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className={`text-xs font-semibold uppercase tracking-wide
+                                        ${rec.type === 'DIET' ? 'text-green-500' : 'text-purple-500'}`}>
+                        {rec.type === 'DIET' ? 'Meal Plan' : 'Workout'}
+                      </span>
+
+                      {/* Clean Card Display */}
+                      <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700">
+                        <h4 className="font-medium text-health-text mb-2 text-sm">{title}</h4>
+                        <div className="space-y-1">
+                          {details.map((line, idx) => (
+                            <p key={idx} className="text-xs text-zinc-500 flex items-start gap-2">
+                              <span className="opacity-50">•</span> {line}
+                            </p>
+                          ))}
+                        </div>
+                        <Link href={rec.type === 'DIET' ? '/diet' : '/exercise'} className="text-xs font-medium text-primary-600 mt-3 inline-block hover:underline">
+                          View Details →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* "Log Steps" Generic Prompt */}
+              <div className="relative">
+                <div className="absolute -left-[41px] top-1 w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 border-2 border-white dark:border-black flex items-center justify-center">
+                  <CheckCircle2 className="w-3 h-3 text-zinc-400" />
+                </div>
+                <div className="flex flex-col gap-1 opacity-60">
+                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Anytime</span>
+                  <h3 className="text-base font-medium text-health-text">Log your steps</h3>
+                  <Link href="/metrics" className="text-xs text-primary-600 hover:underline">
+                    Add data +
+                  </Link>
+                </div>
+              </div>
+
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-health-muted mb-4">No upcoming appointments</p>
-              <GradientButton asChild>
-                <Link href="/appointments">
-                  Book Appointment
-                </Link>
-              </GradientButton>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      {recentMetrics.length > 0 && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-health-text">Recent Health Metrics</h2>
-            <Link href="/metrics" className="text-sm text-primary-600 hover:text-primary-700">
-              View All
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {recentMetrics[0]?.weight && (
-              <MetricCard
-                icon={<Activity className="w-5 h-5" />}
-                label="Weight"
-                value={`${recentMetrics[0].weight} kg`}
-                trend={getTrend(recentMetrics, 'weight')}
-              />
-            )}
-            {recentMetrics[0]?.sleepHours && (
-              <MetricCard
-                icon={<Moon className="w-5 h-5" />}
-                label="Sleep"
-                value={`${recentMetrics[0].sleepHours} hrs`}
-                trend={getTrend(recentMetrics, 'sleepHours')}
-              />
-            )}
-            {recentMetrics[0]?.stepsCount && (
-              <MetricCard
-                icon={<Footprints className="w-5 h-5" />}
-                label="Steps"
-                value={recentMetrics[0].stepsCount.toLocaleString()}
-                trend={getTrend(recentMetrics, 'stepsCount')}
-              />
-            )}
-            {recentMetrics[0]?.waterIntake && (
-              <MetricCard
-                icon={<Activity className="w-5 h-5" />}
-                label="Water"
-                value={`${recentMetrics[0].waterIntake} L`}
-                trend={getTrend(recentMetrics, 'waterIntake')}
-              />
-            )}
           </div>
         </div>
-      )}
 
-      {/* AI Assistant CTA */}
-      <div className="card bg-gradient-to-r from-accent-600 to-accent-700">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="text-white">
-            <h2 className="text-xl font-bold mb-1">Need Health Advice?</h2>
-            <p className="text-accent-100">
-              Chat with our AI health assistant for personalized guidance
-            </p>
-          </div>
-          <GradientButton asChild className="bg-white text-accent-700 hover:bg-accent-50">
-            <Link href="/chat">
-              <MessageCircle className="w-5 h-5 mr-2" />
-              Start Chat
-            </Link>
-          </GradientButton>
+        {/* Right Column: Profile Sidebar (Span 1) */}
+        <div className="hidden lg:block">
+          <ProfileSidebar user={user} healthProfile={healthProfile} />
         </div>
+
       </div>
+
     </div>
   );
 }
 
-function ScoreCard({
-  icon,
-  label,
-  score,
-  color
-}: {
-  icon: React.ReactNode;
-  label: string;
-  score: number;
-  color: string;
-}) {
-  const colorMap: Record<string, string> = {
-    primary: 'bg-primary-600',
-    blue: 'bg-blue-600',
-    purple: 'bg-purple-600',
-    orange: 'bg-orange-600',
-  };
+// Helper to clean up the unstructured data
+function parseRecommendation(content: any, type: string) {
+  let rawString = '';
 
-  return (
-    <div className="card p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-lg ${colorMap[color]} bg-opacity-10 flex items-center justify-center`}>
-          <span className={`${colorMap[color].replace('bg-', 'text-')}`}>{icon}</span>
-        </div>
-        <span className="text-sm text-health-muted">{label}</span>
-      </div>
-      <div className="flex items-end gap-2">
-        <span className="text-2xl font-bold text-health-text">{Math.round(score)}</span>
-        <span className="text-sm text-health-muted mb-1">/100</span>
-      </div>
-      <div className="mt-2 progress-bar">
-        <div
-          className={`progress-fill ${colorMap[color]}`}
-          style={{ width: `${score}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+  // Handle if content is object or string
+  if (typeof content === 'string') {
+    rawString = content;
+  } else if (typeof content === 'object') {
+    // Try to find meaningful string in object
+    rawString = JSON.stringify(content);
+  }
 
-function ProfileItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-sm text-health-muted">{label}</p>
-      <p className="font-medium text-health-text capitalize">{value}</p>
-    </div>
-  );
-}
+  // Default Fallback
+  let title = type === 'DIET' ? 'Daily Nutrition Plan' : 'Recommended Activity';
+  let details = ['View details for full plan'];
 
-function MetricCard({
-  icon,
-  label,
-  value,
-  trend,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  trend: 'up' | 'down' | 'stable' | null;
-}) {
-  return (
-    <div className="p-4 rounded-lg bg-health-muted/10">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-health-muted">{icon}</span>
-        {trend && (
-          <span className={`${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-400'
-            }`}>
-            {trend === 'up' ? <TrendingUp className="w-4 h-4" /> :
-              trend === 'down' ? <TrendingDown className="w-4 h-4" /> :
-                <Minus className="w-4 h-4" />}
-          </span>
-        )}
-      </div>
-      <p className="text-lg font-semibold text-health-text">{value}</p>
-      <p className="text-sm text-health-muted">{label}</p>
-    </div>
-  );
-}
+  // Heuristic Parsing for "dietPlan:macros:..." style strings
+  if (rawString.includes('dietPlan') || rawString.includes('macros')) {
+    const parts = rawString.split(',');
+    details = parts.slice(0, 3).map(p => p.replace(/"/g, '').replace(/[{}]/g, '').trim());
+  }
 
-function getTrend(metrics: any[], field: string): 'up' | 'down' | 'stable' | null {
-  const values = metrics.map(m => m[field]).filter(v => v !== null && v !== undefined);
-  if (values.length < 2) return null;
+  // Heuristic for Workout objects
+  if (type === 'EXERCISE' && rawString.includes('exercises')) {
+    try {
+      // Attempt to extract exercise names if JSON
+      const obj = typeof content === 'object' ? content : JSON.parse(rawString);
+      if (obj.workoutName) title = obj.workoutName;
+      if (Array.isArray(obj.exercises)) {
+        details = obj.exercises.slice(0, 3).map((e: any) => `${e.name} (${e.sets}x${e.reps})`);
+      }
+    } catch (e) {
+      // Fallback
+      details = rawString.split(',').slice(0, 3).map(s => s.replace(/["{}]/g, '').trim());
+    }
+  }
 
-  const diff = values[0] - values[values.length - 1];
-  if (Math.abs(diff) < 0.01 * values[0]) return 'stable';
-  return diff > 0 ? 'up' : 'down';
+  // Clean up ugly prefixes like "dietPlan:macros:"
+  details = details.map(d => d.replace(/dietPlan:|macros:|calories:/gi, '').trim());
+
+  return { title, details };
 }

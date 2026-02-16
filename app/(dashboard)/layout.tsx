@@ -1,10 +1,11 @@
 // Dashboard Layout with Sidebar
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
+
+import { UserCapsule } from '@/components/layout/UserCapsule';
 import { ProfileAlert } from '@/components/dashboard/ProfileAlert';
 import { CartProvider } from '@/components/providers/CartProvider';
+import { Dock } from '@/components/ui/dock';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,16 +23,16 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-health-bg">
       <CartProvider>
-        <Sidebar user={user as any} />
-        <div className="lg:pl-64">
-          <Header user={user} />
+        <div className="min-h-screen relative">
+          <UserCapsule user={user} />
           <ProfileAlert
             isComplete={!!user.healthProfile?.isComplete}
             completionStep={user.healthProfile?.completionStep || 0}
           />
-          <main className="p-6">
+          <main className="p-6 max-w-7xl mx-auto pb-24">
             {children}
           </main>
+          <Dock userRole={user.role} />
         </div>
       </CartProvider>
     </div>

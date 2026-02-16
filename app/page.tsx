@@ -1,34 +1,25 @@
-// Landing Page
-import Link from 'next/link';
-import {
-  Heart,
-  Brain,
-  Apple,
-  Dumbbell,
-  Calendar,
-  MessageCircle,
-  Shield,
-  Sparkles,
-  ChevronRight,
-  Activity
-} from 'lucide-react';
-import { SplineScene } from "@/components/ui/splite";
-import { Spotlight } from "@/components/ui/spotlight";
-// import { BackgroundPaths } from '@/components/ui/background-paths';
+'use client';
+
+import { StoryHero } from '@/components/landing/demo/StoryHero';
+import { NarrativeFeatures } from '@/components/landing/demo/NarrativeFeatures';
+import { OldHeroCTA } from '@/components/landing/demo/OldHeroCTA';
+import { SuccessStory } from '@/components/landing/SuccessStory';
+import { FreeDietPlanGenerator } from '@/components/landing/FreeDietPlanGenerator';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Typewriter } from '@/components/ui/typewriter';
-import { FreeDietPlanGenerator } from '@/components/landing/FreeDietPlanGenerator';
-import { SuccessStory } from '@/components/landing/SuccessStory';
+import { Heart, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-health-bg">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-health-bg/80 backdrop-blur-md border-b border-health-border">
+    <div className="min-h-screen bg-black text-foreground selection:bg-primary-500/30">
+
+      {/* Navigation (Reused from Main Page) */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-health-text leading-tight">Health</span>
+              <span className="text-xl font-bold text-white leading-tight">Health</span>
               <div className="text-sm font-medium text-primary-500">
                 <Typewriter
                   text={["Agent", "Partner", "Advisor"]}
@@ -55,219 +46,46 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      {/* Hero Section */}
-      <section className="w-full bg-black/[0.96] relative overflow-hidden">
-        <Spotlight
-          className="-top-40 left-0 md:left-60 md:-top-20"
-          fill="white"
-        />
+      {/* Subtle Grid Background */}
+      <div className="fixed inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] pt-16">
-          {/* Left content */}
-          <div className="flex-1 p-8 md:p-16 relative z-10 flex flex-col justify-center">
-            <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 mb-6">
-              Your Personal AI Health Assistant
-            </h1>
-            <div className="flex flex-col items-start gap-8">
-              <p className="text-xl text-neutral-300 max-w-2xl">
-                Get personalized diet plans, exercise routines, yoga recommendations, and health guidance tailored to your unique profile. Powered by advanced AI.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <GradientButton asChild className="z-20 text-lg h-14 min-w-[200px] cursor-pointer">
-                  <Link href="#try-diet-planner">
-                    Try Free AI Diet Plan
-                    <ChevronRight className="w-5 h-5 ml-2" />
-                  </Link>
-                </GradientButton>
-                <GradientButton asChild variant="variant" className="z-20 text-lg h-14 min-w-[200px]">
-                  <Link href="/login">
-                    I already have an account
-                  </Link>
-                </GradientButton>
-              </div>
+      <main className="relative z-10">
+        {/* 1. New Story Hero (Dashboard Tilt) */}
+        <StoryHero />
+
+        {/* 2. Expanded Narrative (Scroll Story) */}
+        <NarrativeFeatures />
+
+        {/* 3. Reused Success Story */}
+        <section className="relative">
+          <SuccessStory />
+        </section>
+
+        {/* 4. "Try It Now" - Old Hero Design */}
+        <OldHeroCTA />
+
+        {/* 5. Diet Generator & Final Footer Area */}
+        <section className="py-20 px-4 relative bg-gradient-to-t from-black via-black to-transparent">
+          <div className="max-w-5xl mx-auto space-y-16">
+            {/* Calculator */}
+            <FreeDietPlanGenerator />
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-8 px-4 border-t border-white/10 bg-black relative z-10">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-primary-600" />
+              <span className="font-semibold text-white">Health Agent</span>
             </div>
-          </div>
-
-          {/* Right content - Spline Scene */}
-          <div className="flex-1 relative h-[50vh] md:h-auto w-full">
-            <SplineScene
-              scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-              className="w-full h-full"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Free Diet Plan Generator */}
-      <FreeDietPlanGenerator />
-
-
-      {/* Features Grid */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-health-text mb-4">Everything You Need for Better Health</h2>
-            <p className="text-health-muted max-w-2xl mx-auto">
-              Comprehensive health management powered by AI, designed around your unique health profile
+            <p className="text-sm text-neutral-500">
+              © {new Date().getFullYear()} Health Agent. All rights reserved.
             </p>
           </div>
+        </footer>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FeatureCard
-              icon={<MessageCircle className="w-6 h-6" />}
-              title="AI Health Chat"
-              description="Ask health questions and get personalized answers based on your health profile"
-              color="primary"
-            />
-            <FeatureCard
-              icon={<Apple className="w-6 h-6" />}
-              title="Diet Recommendations"
-              description="Personalized meal plans considering your conditions, allergies, and goals"
-              color="green"
-            />
-            <FeatureCard
-              icon={<Dumbbell className="w-6 h-6" />}
-              title="Exercise Plans"
-              description="Safe workout routines tailored to your fitness level and any injuries"
-              color="blue"
-            />
-            <FeatureCard
-              icon={<Activity className="w-6 h-6" />}
-              title="Yoga Sessions"
-              description="Yoga poses mapped to body parts and health conditions with safety guidelines"
-              color="purple"
-            />
-            <FeatureCard
-              icon={<Calendar className="w-6 h-6" />}
-              title="Doctor Appointments"
-              description="Book appointments with natural language - just say when you want to visit"
-              color="orange"
-            />
-            <FeatureCard
-              icon={<Brain className="w-6 h-6" />}
-              title="Health Assessment"
-              description="Track BMI, activity, sleep, and stress scores with AI-powered insights"
-              color="pink"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-health-text mb-4">How It Works</h2>
-            <p className="text-health-muted max-w-2xl mx-auto">
-              Get started in three simple steps
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <StepCard
-              number="1"
-              title="Create Your Profile"
-              description="Answer a few questions about your health, conditions, and goals to build your unique health profile"
-            />
-            <StepCard
-              number="2"
-              title="Get Personalized Advice"
-              description="Receive AI-powered recommendations for diet, exercise, and yoga tailored specifically to you"
-            />
-            <StepCard
-              number="3"
-              title="Track & Improve"
-              description="Monitor your progress, book doctor appointments, and continuously improve your health"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Success Story */}
-      <SuccessStory />
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-health-text mb-4">
-            Ready to Transform Your Health?
-          </h2>
-          <p className="text-health-muted mb-8">
-            Join thousands of users who are taking control of their health with AI-powered guidance
-          </p>
-          <GradientButton asChild className="text-lg h-14 px-8">
-            <Link href="/register">
-              Create Free Account
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Link>
-          </GradientButton>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 px-4 border-t border-health-border">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary-600" />
-            <span className="font-semibold text-health-text">Health Agent</span>
-          </div>
-          <p className="text-sm text-health-muted">
-            © {new Date().getFullYear()} Health Agent. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-  color
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  color: string;
-}) {
-  const colorClasses: Record<string, string> = {
-    primary: 'bg-primary-100 text-primary-600',
-    green: 'bg-green-100 text-green-600',
-    blue: 'bg-blue-100 text-blue-600',
-    purple: 'bg-purple-100 text-purple-600',
-    orange: 'bg-orange-100 text-orange-600',
-    pink: 'bg-pink-100 text-pink-600',
-  };
-
-  return (
-    <div className="card card-hover">
-      <div className={`w-12 h-12 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-4`}>
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold text-health-text mb-2">{title}</h3>
-      <p className="text-health-muted">{description}</p>
-    </div>
-  );
-}
-
-function StepCard({
-  number,
-  title,
-  description
-}: {
-  number: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="text-center">
-      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-4">
-        {number}
-      </div>
-      <h3 className="text-xl font-semibold text-health-text mb-2">{title}</h3>
-      <p className="text-health-muted">{description}</p>
+      </main>
     </div>
   );
 }

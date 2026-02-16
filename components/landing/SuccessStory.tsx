@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRef } from 'react';
 import { useScroll, useTransform, motion, MotionValue } from 'framer-motion';
-import { ReactLenis } from 'lenis/react';
+
 import { Quote } from 'lucide-react';
 
 export function SuccessStory() {
@@ -47,45 +47,44 @@ export function SuccessStory() {
     ];
 
     return (
-        <ReactLenis root>
-            <div className="bg-black">
-                <header className='text-white relative w-full bg-black grid place-content-center h-[50vh] overflow-hidden'>
-                    <div className='absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-size-[14px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'></div>
+        <div className="bg-black">
+            <header className='text-white relative w-full bg-black grid place-content-center h-[50vh] overflow-hidden'>
+                <div className='absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-size-[14px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'></div>
 
-                    <div className="relative z-10 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 text-primary-400 text-sm font-medium mb-4">
-                            <Quote className="w-4 h-4" />
-                            <span>Success Stories</span>
-                        </div>
-                        <h1 className='text-4xl md:text-6xl font-bold tracking-tight mb-4'>
-                            Real Stories <br />
-                            <span className="text-primary-500">Real Results</span>
-                        </h1>
-                        <p className="text-slate-400 max-w-xl mx-auto">
-                            Scroll to see Sarah&apos;s transformation journey with Health Agent.
-                        </p>
+                <div className="relative z-10 text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 text-primary-400 text-sm font-medium mb-4">
+                        <Quote className="w-4 h-4" />
+                        <span>Success Stories</span>
                     </div>
-                </header>
-
-                {/* Sticky Container */}
-                <div ref={containerRef} className="relative h-[600vh] bg-black">
-                    <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center">
-                        {stories.map((story, index) => (
-                            <StorySection
-                                key={index}
-                                story={story}
-                                index={index}
-                                total={stories.length}
-                                scrollYProgress={scrollYProgress}
-                            />
-                        ))}
-                    </div>
+                    <h1 className='text-4xl md:text-6xl font-bold tracking-tight mb-4'>
+                        Real Stories <br />
+                        <span className="text-primary-500">Real Results</span>
+                    </h1>
+                    <p className="text-slate-400 max-w-xl mx-auto">
+                        Scroll to see Sarah&apos;s transformation journey with Health Agent.
+                    </p>
                 </div>
+            </header>
 
-                {/* Spacer for next section */}
-                <div className="h-[20vh] bg-black" />
+            {/* Sticky Container */}
+            <div ref={containerRef} className="relative h-[600vh] bg-black">
+                <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center">
+                    {stories.map((story, index) => (
+                        <StorySection
+                            key={index}
+                            story={story}
+                            index={index}
+                            total={stories.length}
+                            scrollYProgress={scrollYProgress}
+                        />
+                    ))}
+                </div>
             </div>
-        </ReactLenis>
+
+            {/* Spacer for next section */}
+            <div className="h-[20vh] bg-black" />
+        </div>
+
     );
 }
 

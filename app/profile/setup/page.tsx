@@ -12,8 +12,15 @@ import {
   Heart,
   Utensils,
   Target,
-  CheckCircle
+  CheckCircle,
+  Activity,
+  Moon,
+  Zap,
+  Flame // Using lucide icons for goals/lifestyle
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { GradientButton } from '@/components/ui/gradient-button';
 
 const STEPS = [
   { id: 1, name: 'Basic Info', icon: User },
@@ -26,7 +33,14 @@ export default function ProfileSetupPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  // Initialize array fields as empty strings for smooth typing
+  const [formData, setFormData] = useState<Record<string, any>>({
+    allergies: '',
+    medications: '',
+    injuries: '',
+    existingConditions: [], // Keep as array for selection buttons
+    secondaryGoals: [] // Keep as array for selection buttons
+  });
 
   function updateFormData(data: Record<string, any>) {
     setFormData(prev => ({ ...prev, ...data }));
@@ -35,6 +49,7 @@ export default function ProfileSetupPage() {
   async function handleNext() {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       await handleSubmit();
     }
@@ -43,6 +58,7 @@ export default function ProfileSetupPage() {
   function handleBack() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -73,53 +89,60 @@ export default function ProfileSetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-health-bg py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-black text-zinc-200 py-12 px-4 sm:px-6 lg:px-8 selection:bg-primary-900/30 selection:text-primary-200">
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-health-text mb-2">Complete Your Health Profile</h1>
-          <p className="text-health-muted">
-            Help us personalize your health recommendations
+        <div className="text-center mb-12 animate-fadeIn">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-3">
+            Setup Your Profile
+          </h1>
+          <p className="text-zinc-400 max-w-lg mx-auto text-lg">
+            Let's personalize your health journey. This helps our AI tailor recommendations just for you.
           </p>
         </div>
 
         {/* Progress Steps */}
-        <div className="flex justify-between mb-8 relative">
-          {/* Progress Line */}
-          <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
+        <div className="mb-12 relative">
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-zinc-800 -z-10 -translate-y-1/2 rounded-full" />
           <div
-            className="absolute top-5 left-0 h-0.5 bg-primary-500 -z-10 transition-all"
-            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+            className="absolute top-1/2 left-0 h-0.5 bg-gradient-to-r from-primary-600 to-primary-400 -z-10 -translate-y-1/2 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
           />
 
-          {STEPS.map((step) => {
-            const Icon = step.icon;
-            const isComplete = currentStep > step.id;
-            const isCurrent = currentStep === step.id;
+          <div className="flex justify-between relative px-2">
+            {STEPS.map((step) => {
+              const Icon = step.icon;
+              const isComplete = currentStep > step.id;
+              const isCurrent = currentStep === step.id;
 
-            return (
-              <div key={step.id} className="flex flex-col items-center">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isComplete
-                      ? 'bg-primary-500 text-white'
-                      : isCurrent
-                        ? 'bg-primary-500 text-white ring-4 ring-primary-100'
-                        : 'bg-white border-2 border-gray-200 text-gray-400'
-                    }`}
-                >
-                  {isComplete ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+              return (
+                <div key={step.id} className="flex flex-col items-center group">
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-4",
+                      isComplete
+                        ? 'bg-primary-600 border-black text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]'
+                        : isCurrent
+                          ? 'bg-black border-primary-500 text-primary-400 shadow-[0_0_20px_rgba(37,99,235,0.3)] scale-110'
+                          : 'bg-zinc-900 border-black text-zinc-600'
+                    )}
+                  >
+                    {isComplete ? <CheckCircle className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
+                  </div>
+                  <span className={cn(
+                    "mt-3 text-xs font-semibold uppercase tracking-wider transition-colors duration-300",
+                    isCurrent ? 'text-primary-400' : isComplete ? 'text-zinc-300' : 'text-zinc-600'
+                  )}>
+                    {step.name}
+                  </span>
                 </div>
-                <span className={`mt-2 text-xs font-medium ${isCurrent ? 'text-primary-600' : 'text-health-muted'
-                  }`}>
-                  {step.name}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Form Card */}
-        <div className="card">
+        <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-2xl animate-slideUp">
           {currentStep === 1 && (
             <BasicInfoStep data={formData} onChange={updateFormData} />
           )}
@@ -134,161 +157,286 @@ export default function ProfileSetupPage() {
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-health-border">
-            <button
-              type="button"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className={`btn-secondary ${currentStep === 1 ? 'invisible' : ''}`}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
+          <div className="flex justify-between mt-12 pt-8 border-t border-zinc-800/50">
+            <div className="flex-1"> {/* Spacer for alignment or back button */}
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                className={cn(
+                  "flex items-center px-6 py-3 rounded-xl text-sm font-medium transition-colors",
+                  currentStep === 1
+                    ? 'invisible'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                )}
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Back
+              </button>
+            </div>
 
-            <button
-              type="button"
+            <GradientButton
+              variant="variant"
               onClick={handleNext}
               disabled={isLoading}
-              className="btn-primary"
+              className="h-auto py-3 px-8 text-sm shadow-none hover:shadow-none min-w-[160px]"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Saving...
                 </>
               ) : currentStep === 4 ? (
                 <>
-                  Complete Profile
-                  <CheckCircle className="w-4 h-4 ml-1" />
+                  Complete Setup
+                  <CheckCircle className="w-5 h-5 ml-2" />
                 </>
               ) : (
                 <>
                   Continue
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="w-5 h-5 ml-2" />
                 </>
               )}
-            </button>
+            </GradientButton>
           </div>
         </div>
 
         {/* Skip Option */}
-        <p className="text-center mt-4 text-sm text-health-muted">
-          Want to complete this later?{' '}
+        <div className="text-center mt-8">
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-primary-600 hover:text-primary-700"
+            className="text-sm text-zinc-600 hover:text-zinc-300 transition-colors"
           >
             Skip for now
           </button>
-        </p>
+        </div>
       </div>
     </div>
   );
 }
 
-// Step 1: Basic Info
-function BasicInfoStep({
-  data,
+// Reusable Components
+
+function SectionHeader({ title, description }: { title: string, description: string }) {
+  return (
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+      <p className="text-zinc-400">{description}</p>
+    </div>
+  );
+}
+
+function InputLabel({ children }: { children: React.ReactNode }) {
+  return <label className="block text-sm font-medium text-zinc-300 mb-2">{children}</label>;
+}
+
+function StyledInput({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={cn(
+        "w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-600/50 focus:border-primary-600 transition-all",
+        props.className
+      )}
+    />
+  );
+}
+
+function PremiumDropdown({
+  label,
+  value,
+  options,
+  onChange,
+  placeholder = "Select an option"
+}: {
+  label?: string;
+  value: string;
+  options: { value: string, label: string }[];
+  onChange: (val: string) => void;
+  placeholder?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative w-full">
+      {label && <InputLabel>{label}</InputLabel>}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-left flex items-center justify-between transition-all hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-primary-600/50",
+          isOpen && "border-primary-600/50 ring-2 ring-primary-600/20"
+        )}
+      >
+        <span className={cn("truncate font-medium", !selectedOption ? "text-zinc-600" : "text-zinc-100")}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronRight className={cn("w-4 h-4 text-zinc-500 transition-transform duration-300", isOpen && "rotate-90")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-[60]" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute z-[70] w-full mt-2 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden py-1.5 backdrop-blur-3xl"
+            >
+              <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                {options.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      "w-full px-4 py-3 text-left text-sm transition-all flex items-center justify-between group",
+                      value === opt.value
+                        ? "bg-primary-600/20 text-primary-400 font-bold"
+                        : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                    )}
+                  >
+                    <span>{opt.label}</span>
+                    {value === opt.value && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <CheckCircle className="w-4 h-4" />
+                      </motion.div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+function StyledSlider({
+  label,
+  value,
+  min,
+  max,
+  unit,
   onChange
 }: {
-  data: Record<string, any>;
-  onChange: (data: Record<string, any>) => void;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  unit: string;
+  onChange: (val: number) => void;
 }) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-health-text mb-1">Basic Information</h2>
-        <p className="text-sm text-health-muted">Tell us a bit about yourself</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Age</label>
-          <input
-            type="number"
-            min="1"
-            max="120"
-            value={data.age || ''}
-            onChange={(e) => onChange({ age: e.target.value })}
-            className="input"
-            placeholder="Enter your age"
-          />
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 transition-colors hover:border-primary-500/50 group"
+    >
+      <div className="flex justify-between items-center mb-4">
+        <label className="text-sm font-semibold text-zinc-400 group-hover:text-zinc-200 transition-colors uppercase tracking-wider">{label}</label>
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-bold text-white leading-none">{value || min}</span>
+          <span className="text-xs font-medium text-zinc-500">{unit}</span>
         </div>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value || min}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 focus:outline-none"
+      />
+      <div className="flex justify-between mt-2">
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{min} {unit}</span>
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{max} {unit}</span>
+      </div>
+    </motion.div>
+  );
+}
 
-        <div>
-          <label className="label">Gender</label>
-          <select
+function BasicInfoStep({ data, onChange }: { data: Record<string, any>; onChange: (data: Record<string, any>) => void; }) {
+  const genderOptions = [
+    { value: "MALE", label: "Male" },
+    { value: "FEMALE", label: "Female" },
+    { value: "OTHER", label: "Other" },
+    { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say" },
+  ];
+
+  const bloodTypeOptions = [
+    { value: "A+", label: "A+" },
+    { value: "A-", label: "A-" },
+    { value: "B+", label: "B+" },
+    { value: "B-", label: "B-" },
+    { value: "AB+", label: "AB+" },
+    { value: "AB-", label: "AB-" },
+    { value: "O+", label: "O+" },
+    { value: "O-", label: "O-" },
+  ];
+
+  return (
+    <div className="animate-fadeIn">
+      <SectionHeader title="Basic Information" description="Tell us a bit about yourself to get started." />
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <StyledSlider
+            label="Age"
+            value={parseInt(data.age)}
+            min={1}
+            max={120}
+            unit="Years"
+            onChange={(val) => onChange({ age: val })}
+          />
+          <PremiumDropdown
+            label="Gender"
             value={data.gender || ''}
-            onChange={(e) => onChange({ gender: e.target.value })}
-            className="select"
-          >
-            <option value="">Select gender</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-            <option value="OTHER">Other</option>
-            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Height (cm)</label>
-          <input
-            type="number"
-            min="50"
-            max="300"
-            value={data.height || ''}
-            onChange={(e) => onChange({ height: e.target.value })}
-            className="input"
-            placeholder="e.g., 170"
+            options={genderOptions}
+            onChange={(val) => onChange({ gender: val })}
+            placeholder="Select gender"
           />
         </div>
 
-        <div>
-          <label className="label">Weight (kg)</label>
-          <input
-            type="number"
-            min="10"
-            max="500"
-            value={data.weight || ''}
-            onChange={(e) => onChange({ weight: e.target.value })}
-            className="input"
-            placeholder="e.g., 70"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <StyledSlider
+            label="Height"
+            value={parseInt(data.height)}
+            min={50}
+            max={250}
+            unit="cm"
+            onChange={(val) => onChange({ height: val })}
+          />
+          <StyledSlider
+            label="Weight"
+            value={parseInt(data.weight)}
+            min={10}
+            max={250}
+            unit="kg"
+            onChange={(val) => onChange({ weight: val })}
           />
         </div>
-      </div>
 
-      <div>
-        <label className="label">Blood Type (Optional)</label>
-        <select
+        <PremiumDropdown
+          label="Blood Type (Optional)"
           value={data.bloodType || ''}
-          onChange={(e) => onChange({ bloodType: e.target.value })}
-          className="select"
-        >
-          <option value="">Select blood type</option>
-          <option value="A+">A+</option>
-          <option value="A-">A-</option>
-          <option value="B+">B+</option>
-          <option value="B-">B-</option>
-          <option value="AB+">AB+</option>
-          <option value="AB-">AB-</option>
-          <option value="O+">O+</option>
-          <option value="O-">O-</option>
-        </select>
+          options={bloodTypeOptions}
+          onChange={(val) => onChange({ bloodType: val })}
+          placeholder="Select blood type"
+        />
       </div>
     </div>
   );
 }
 
 // Step 2: Health History
-function HealthHistoryStep({
-  data,
-  onChange
-}: {
-  data: Record<string, any>;
-  onChange: (data: Record<string, any>) => void;
-}) {
+function HealthHistoryStep({ data, onChange }: { data: Record<string, any>; onChange: (data: Record<string, any>) => void; }) {
   const conditions = [
     'Diabetes', 'Hypertension', 'Heart Disease', 'Thyroid Disorder',
     'Asthma', 'Arthritis', 'Back Pain', 'Obesity', 'High Cholesterol',
@@ -304,180 +452,168 @@ function HealthHistoryStep({
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-health-text mb-1">Health History</h2>
-        <p className="text-sm text-health-muted">Help us understand your health background</p>
-      </div>
-
-      <div>
-        <label className="label">Do you have any existing health conditions?</label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-          {conditions.map((condition) => (
-            <button
-              key={condition}
-              type="button"
-              onClick={() => toggleCondition(condition)}
-              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${(data.existingConditions || []).includes(condition)
-                  ? 'bg-primary-50 border-primary-500 text-primary-700'
-                  : 'border-health-border text-health-text hover:bg-gray-50'
-                }`}
-            >
-              {condition}
-            </button>
-          ))}
+    <div className="animate-fadeIn">
+      <SectionHeader title="Health History" description="Help us understand your background for better safety." />
+      <div className="space-y-8">
+        <div>
+          <InputLabel>Existing Health Conditions</InputLabel>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+            {conditions.map((condition) => {
+              const check = (data.existingConditions || []).includes(condition);
+              return (
+                <button
+                  key={condition}
+                  type="button"
+                  onClick={() => toggleCondition(condition)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200",
+                    check
+                      ? 'bg-primary-600 border-primary-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                  )}
+                >
+                  {condition}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label className="label">Any allergies? (food, medicine, etc.)</label>
-        <input
-          type="text"
-          value={(data.allergies || []).join(', ')}
-          onChange={(e) => onChange({
-            allergies: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-          })}
-          className="input"
-          placeholder="e.g., Peanuts, Penicillin (comma separated)"
-        />
-      </div>
+        <div>
+          <InputLabel>Allergies</InputLabel>
+          <StyledInput
+            type="text"
+            value={data.allergies || ''}
+            onChange={(e) => onChange({ allergies: e.target.value })}
+            placeholder="e.g., Peanuts, Penicillin (comma separated)"
+            className="mt-1"
+          />
+        </div>
 
-      <div>
-        <label className="label">Current medications (if any)</label>
-        <input
-          type="text"
-          value={(data.medications || []).join(', ')}
-          onChange={(e) => onChange({
-            medications: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-          })}
-          className="input"
-          placeholder="e.g., Metformin, Aspirin (comma separated)"
-        />
-      </div>
+        <div>
+          <InputLabel>Current medications</InputLabel>
+          <StyledInput
+            type="text"
+            value={data.medications || ''}
+            onChange={(e) => onChange({ medications: e.target.value })}
+            placeholder="e.g., Metformin, Aspirin (comma separated)"
+            className="mt-1"
+          />
+        </div>
 
-      <div>
-        <label className="label">Any injuries or physical limitations?</label>
-        <input
-          type="text"
-          value={(data.injuries || []).join(', ')}
-          onChange={(e) => onChange({
-            injuries: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-          })}
-          className="input"
-          placeholder="e.g., Lower back pain, Knee injury (comma separated)"
-        />
+        <div>
+          <InputLabel>Injuries or limitations</InputLabel>
+          <StyledInput
+            type="text"
+            value={data.injuries || ''}
+            onChange={(e) => onChange({ injuries: e.target.value })}
+            placeholder="e.g., Lower back pain, Knee injury"
+            className="mt-1"
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 // Step 3: Lifestyle
-function LifestyleStep({
-  data,
-  onChange
-}: {
-  data: Record<string, any>;
-  onChange: (data: Record<string, any>) => void;
-}) {
+function LifestyleStep({ data, onChange }: { data: Record<string, any>; onChange: (data: Record<string, any>) => void; }) {
+  const dietOptions = [
+    { value: "VEGETARIAN", label: "Vegetarian" },
+    { value: "NON_VEGETARIAN", label: "Non-Vegetarian" },
+    { value: "VEGAN", label: "Vegan" },
+    { value: "EGGETARIAN", label: "Eggetarian" },
+    { value: "PESCATARIAN", label: "Pescatarian" },
+    { value: "FLEXITARIAN", label: "Flexitarian" },
+  ];
+
+  const activityOptions = [
+    { value: "SEDENTARY", label: "Sedentary (little or no exercise)" },
+    { value: "LIGHTLY_ACTIVE", label: "Lightly Active (1-3 days/week)" },
+    { value: "MODERATELY_ACTIVE", label: "Moderately Active (3-5 days/week)" },
+    { value: "VERY_ACTIVE", label: "Very Active (6-7 days/week)" },
+    { value: "EXTREMELY_ACTIVE", label: "Extremely Active (athlete level)" },
+  ];
+
+  const sleepOptions = [
+    { value: "POOR", label: "Poor (less than 5 hours)" },
+    { value: "FAIR", label: "Fair (5-6 hours)" },
+    { value: "GOOD", label: "Good (6-7 hours)" },
+    { value: "EXCELLENT", label: "Excellent (7-9 hours)" },
+  ];
+
+  const stressOptions = [
+    { value: "LOW", label: "Low" },
+    { value: "MODERATE", label: "Moderate" },
+    { value: "HIGH", label: "High" },
+    { value: "VERY_HIGH", label: "Very High" },
+  ];
+
+  const smokingOptions = [
+    { value: "NEVER", label: "Never" },
+    { value: "FORMER", label: "Former" },
+    { value: "OCCASIONAL", label: "Occasional" },
+    { value: "CURRENT", label: "Current" },
+  ];
+
+  const alcoholOptions = [
+    { value: "NONE", label: "None" },
+    { value: "OCCASIONAL", label: "Occasional" },
+    { value: "MODERATE", label: "Moderate" },
+    { value: "HEAVY", label: "Heavy" },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-health-text mb-1">Your Lifestyle</h2>
-        <p className="text-sm text-health-muted">Tell us about your daily habits</p>
-      </div>
-
-      <div>
-        <label className="label">Diet Preference</label>
-        <select
+    <div className="animate-fadeIn">
+      <SectionHeader title="Lifestyle" description="Tell us about your daily habits and routine." />
+      <div className="space-y-6">
+        <PremiumDropdown
+          label="Diet Preference"
           value={data.dietPreference || ''}
-          onChange={(e) => onChange({ dietPreference: e.target.value })}
-          className="select"
-        >
-          <option value="">Select your diet preference</option>
-          <option value="VEGETARIAN">Vegetarian</option>
-          <option value="NON_VEGETARIAN">Non-Vegetarian</option>
-          <option value="VEGAN">Vegan</option>
-          <option value="EGGETARIAN">Eggetarian</option>
-          <option value="PESCATARIAN">Pescatarian</option>
-          <option value="FLEXITARIAN">Flexitarian</option>
-        </select>
-      </div>
+          options={dietOptions}
+          onChange={(val) => onChange({ dietPreference: val })}
+          placeholder="Select your diet preference"
+        />
 
-      <div>
-        <label className="label">Activity Level</label>
-        <select
+        <PremiumDropdown
+          label="Activity Level"
           value={data.activityLevel || ''}
-          onChange={(e) => onChange({ activityLevel: e.target.value })}
-          className="select"
-        >
-          <option value="">Select your activity level</option>
-          <option value="SEDENTARY">Sedentary (little or no exercise)</option>
-          <option value="LIGHTLY_ACTIVE">Lightly Active (1-3 days/week)</option>
-          <option value="MODERATELY_ACTIVE">Moderately Active (3-5 days/week)</option>
-          <option value="VERY_ACTIVE">Very Active (6-7 days/week)</option>
-          <option value="EXTREMELY_ACTIVE">Extremely Active (athlete level)</option>
-        </select>
-      </div>
+          options={activityOptions}
+          onChange={(val) => onChange({ activityLevel: val })}
+          placeholder="Select your activity level"
+        />
 
-      <div>
-        <label className="label">Sleep Quality</label>
-        <select
+        <PremiumDropdown
+          label="Sleep Quality"
           value={data.sleepQuality || ''}
-          onChange={(e) => onChange({ sleepQuality: e.target.value })}
-          className="select"
-        >
-          <option value="">How would you rate your sleep?</option>
-          <option value="POOR">Poor (less than 5 hours, restless)</option>
-          <option value="FAIR">Fair (5-6 hours, occasional issues)</option>
-          <option value="GOOD">Good (6-7 hours, mostly restful)</option>
-          <option value="EXCELLENT">Excellent (7-9 hours, very restful)</option>
-        </select>
-      </div>
+          options={sleepOptions}
+          onChange={(val) => onChange({ sleepQuality: val })}
+          placeholder="How would you rate your sleep?"
+        />
 
-      <div>
-        <label className="label">Stress Level</label>
-        <select
+        <PremiumDropdown
+          label="Stress Level"
           value={data.stressLevel || ''}
-          onChange={(e) => onChange({ stressLevel: e.target.value })}
-          className="select"
-        >
-          <option value="">How stressed are you generally?</option>
-          <option value="LOW">Low (rarely stressed)</option>
-          <option value="MODERATE">Moderate (sometimes stressed)</option>
-          <option value="HIGH">High (often stressed)</option>
-          <option value="VERY_HIGH">Very High (constantly stressed)</option>
-        </select>
-      </div>
+          options={stressOptions}
+          onChange={(val) => onChange({ stressLevel: val })}
+          placeholder="General stress level"
+        />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Smoking Status</label>
-          <select
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <PremiumDropdown
+            label="Smoking"
             value={data.smokingStatus || ''}
-            onChange={(e) => onChange({ smokingStatus: e.target.value })}
-            className="select"
-          >
-            <option value="">Select</option>
-            <option value="NEVER">Never smoked</option>
-            <option value="FORMER">Former smoker</option>
-            <option value="OCCASIONAL">Occasional</option>
-            <option value="CURRENT">Current smoker</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="label">Alcohol Consumption</label>
-          <select
+            options={smokingOptions}
+            onChange={(val) => onChange({ smokingStatus: val })}
+            placeholder="Select Status"
+          />
+          <PremiumDropdown
+            label="Alcohol"
             value={data.alcoholConsumption || ''}
-            onChange={(e) => onChange({ alcoholConsumption: e.target.value })}
-            className="select"
-          >
-            <option value="">Select</option>
-            <option value="NONE">None</option>
-            <option value="OCCASIONAL">Occasional</option>
-            <option value="MODERATE">Moderate</option>
-            <option value="HEAVY">Heavy</option>
-          </select>
+            options={alcoholOptions}
+            onChange={(val) => onChange({ alcoholConsumption: val })}
+            placeholder="Select Status"
+          />
         </div>
       </div>
     </div>
@@ -485,25 +621,15 @@ function LifestyleStep({
 }
 
 // Step 4: Goals
-function GoalsStep({
-  data,
-  onChange
-}: {
-  data: Record<string, any>;
-  onChange: (data: Record<string, any>) => void;
-}) {
+function GoalsStep({ data, onChange }: { data: Record<string, any>; onChange: (data: Record<string, any>) => void; }) {
   const goals = [
-    { value: 'WEIGHT_LOSS', label: 'Weight Loss', icon: '🔥' },
-    { value: 'WEIGHT_GAIN', label: 'Weight Gain', icon: '💪' },
-    { value: 'MUSCLE_BUILDING', label: 'Muscle Building', icon: '🏋️' },
-    { value: 'MAINTAIN_WEIGHT', label: 'Maintain Weight', icon: '⚖️' },
-    { value: 'IMPROVE_FITNESS', label: 'Improve Fitness', icon: '🏃' },
-    { value: 'INCREASE_FLEXIBILITY', label: 'Increase Flexibility', icon: '🧘' },
-    { value: 'STRESS_REDUCTION', label: 'Stress Reduction', icon: '😌' },
-    { value: 'BETTER_SLEEP', label: 'Better Sleep', icon: '😴' },
-    { value: 'MANAGE_CONDITION', label: 'Manage Health Condition', icon: '❤️' },
-    { value: 'GENERAL_WELLNESS', label: 'General Wellness', icon: '✨' },
-    { value: 'INJURY_RECOVERY', label: 'Injury Recovery', icon: '🩹' },
+    { value: 'WEIGHT_LOSS', label: 'Weight Loss', icon: Flame },
+    { value: 'WEIGHT_GAIN', label: 'Weight Gain', icon: Activity },
+    { value: 'MUSCLE_BUILDING', label: 'Muscle Building', icon: Zap },
+    { value: 'MAINTAIN_WEIGHT', label: 'Maintain Weight', icon: Target },
+    { value: 'IMPROVE_FITNESS', label: 'Improve Fitness', icon: Heart },
+    { value: 'BETTER_SLEEP', label: 'Better Sleep', icon: Moon },
+    { value: 'STRESS_REDUCTION', label: 'Reduce Stress', icon: Utensils },
   ];
 
   const toggleSecondaryGoal = (goal: string) => {
@@ -516,67 +642,79 @@ function GoalsStep({
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-health-text mb-1">Your Health Goals</h2>
-        <p className="text-sm text-health-muted">What do you want to achieve?</p>
-      </div>
-
-      <div>
-        <label className="label">Primary Goal</label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-          {goals.map((goal) => (
-            <button
-              key={goal.value}
-              type="button"
-              onClick={() => onChange({ primaryGoal: goal.value })}
-              className={`px-3 py-3 rounded-lg text-sm border transition-colors text-left ${data.primaryGoal === goal.value
-                  ? 'bg-primary-50 border-primary-500 text-primary-700'
-                  : 'border-health-border text-health-text hover:bg-gray-50'
-                }`}
-            >
-              <span className="text-lg mr-2">{goal.icon}</span>
-              {goal.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label className="label">Secondary Goals (Optional)</label>
-        <p className="text-xs text-health-muted mb-2">Select any additional goals you&apos;d like to work towards</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {goals.filter(g => g.value !== data.primaryGoal).map((goal) => (
-            <button
-              key={goal.value}
-              type="button"
-              onClick={() => toggleSecondaryGoal(goal.value)}
-              className={`px-3 py-2 rounded-lg text-sm border transition-colors text-left ${(data.secondaryGoals || []).includes(goal.value)
-                  ? 'bg-accent-50 border-accent-500 text-accent-700'
-                  : 'border-health-border text-health-text hover:bg-gray-50'
-                }`}
-            >
-              <span className="mr-1">{goal.icon}</span>
-              {goal.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {(data.primaryGoal === 'WEIGHT_LOSS' || data.primaryGoal === 'WEIGHT_GAIN') && (
+    <div className="animate-fadeIn">
+      <SectionHeader title="Your Goals" description="What do you want to achieve with Health Agent?" />
+      <div className="space-y-8">
         <div>
-          <label className="label">Target Weight (kg)</label>
-          <input
-            type="number"
-            min="20"
-            max="300"
-            value={data.targetWeight || ''}
-            onChange={(e) => onChange({ targetWeight: e.target.value })}
-            className="input"
-            placeholder="Enter your target weight"
-          />
+          <InputLabel>Primary Goal</InputLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            {goals.map((goal) => {
+              const Icon = goal.icon;
+              const isSelected = data.primaryGoal === goal.value;
+              return (
+                <button
+                  key={goal.value}
+                  type="button"
+                  onClick={() => onChange({ primaryGoal: goal.value })}
+                  className={cn(
+                    "flex items-center px-4 py-4 rounded-xl text-left border transition-all duration-200 group",
+                    isSelected
+                      ? 'bg-primary-600 border-primary-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] ring-1 ring-primary-400'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900'
+                  )}
+                >
+                  <div className={cn(
+                    "p-2 rounded-lg mr-4 transition-colors",
+                    isSelected ? 'bg-white/20 text-white' : 'bg-zinc-900 text-zinc-500 group-hover:text-zinc-300'
+                  )}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium">{goal.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )}
+
+        <div>
+          <InputLabel>Secondary Goals (Optional)</InputLabel>
+          <p className="text-sm text-zinc-500 mb-3">Select any additional areas you'd like to improve.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {goals.filter(g => g.value !== data.primaryGoal).map((goal) => {
+              const check = (data.secondaryGoals || []).includes(goal.value);
+              return (
+                <button
+                  key={goal.value}
+                  type="button"
+                  onClick={() => toggleSecondaryGoal(goal.value)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200",
+                    check
+                      ? 'bg-primary-900/50 border-primary-500 text-primary-200'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                  )}
+                >
+                  {goal.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {(data.primaryGoal === 'WEIGHT_LOSS' || data.primaryGoal === 'WEIGHT_GAIN') && (
+          <div className="pt-6 border-t border-zinc-800/50">
+            <StyledSlider
+              label="Target Weight"
+              value={parseInt(data.targetWeight)}
+              min={20}
+              max={250}
+              unit="kg"
+              onChange={(val) => onChange({ targetWeight: val })}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+

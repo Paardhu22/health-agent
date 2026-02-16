@@ -8,14 +8,14 @@ import {
     Clock,
     Flame,
     Activity,
-    MoreVertical,
     Dumbbell,
     Leaf,
     Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export function HistoryView() {
+export function HistoryView({ filterType }: { filterType?: 'EXERCISE' | 'YOGA' }) {
     const [history, setHistory] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +24,11 @@ export function HistoryView() {
             try {
                 const result = await getWorkoutHistory();
                 if (result.success && result.data) {
-                    setHistory(result.data);
+                    let data = result.data;
+                    if (filterType) {
+                        data = data.filter((session: any) => session.activityType === filterType);
+                    }
+                    setHistory(data);
                 }
             } catch (error) {
                 console.error('Failed to load history', error);
@@ -33,12 +37,32 @@ export function HistoryView() {
             }
         }
         loadHistory();
-    }, []);
+    }, [filterType]);
+
+    // ... (Skeleton loading state remains same)
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+            <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="card p-4 space-y-4">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="w-12 h-12 rounded-lg" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-5 w-32" />
+                                    <Skeleton className="h-4 w-24" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-6 w-20 rounded-full" />
+                        </div>
+                        <div className="flex gap-4 pt-4 border-t border-white/5">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-20" />
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     }
@@ -51,7 +75,10 @@ export function HistoryView() {
                 </div>
                 <h3 className="text-xl font-semibold text-health-text mb-2">No History Yet</h3>
                 <p className="text-health-muted max-w-md">
-                    Complete your first yoga or workout session to start tracking your progress here.
+                    {filterType === 'YOGA'
+                        ? "Complete your first yoga practice to start tracking your progress here."
+                        : "Complete your first workout to start tracking your progress here."
+                    }
                 </p>
             </div>
         );

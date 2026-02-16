@@ -204,3 +204,47 @@ export async function getDoctorStats(): Promise<DoctorActionResult> {
         return { success: false, error: 'Failed to get doctor stats' };
     }
 }
+
+export async function getDoctorTodayAppointments(): Promise<DoctorActionResult> {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            return { success: false, error: 'Not authenticated' };
+        }
+
+        const doctor = await prisma.doctor.findFirst({
+            where: { userId: user.id },
+        });
+
+        if (!doctor) {
+            return { success: false, error: 'Doctor profile not found' };
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const appointments = await prisma.appointment.findMany({
+            where: {
+                doctorId: doctor.id,
+                scheduledDate: {
+                    gte: today,
+                    lt: tomorrow,
+                },
+                status: 'CONFIRMED'
+            },
+            include: {
+                user: true
+            },
+            orderBy: {
+                scheduledTime: 'asc'
+            }
+        });
+
+        return { success: true, data: appointments };
+    } catch (error) {
+        console.error('Get doctor appointments error:', error);
+        return { success: false, error: 'Failed to get doctor appointments' };
+    }
+}

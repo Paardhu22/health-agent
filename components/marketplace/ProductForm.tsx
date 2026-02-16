@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProduct, updateProduct } from '@/lib/actions/marketplace';
-import { Loader2, Upload, ShoppingBag, DollarSign, Package } from 'lucide-react';
+import { Loader2, Upload, ShoppingBag, DollarSign, Package, Tag, AlignLeft, AlertCircle } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface ProductFormProps {
     product?: any;
@@ -21,10 +23,69 @@ const CATEGORIES = [
     'Other'
 ];
 
+function StyledSlider({
+    label,
+    value,
+    min,
+    max,
+    step = 1,
+    unit = "",
+    onChange,
+    icon: Icon
+}: {
+    label: string;
+    value: number;
+    min: number;
+    max: number;
+    step?: number;
+    unit?: string;
+    onChange: (val: number) => void;
+    icon: any;
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-end">
+                <label className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">
+                    {label}
+                </label>
+                <div className="text-right">
+                    <span className="text-2xl font-black text-white tabular-nums">
+                        {unit === "$" ? `${unit}${value.toFixed(2)}` : `${value}${unit}`}
+                    </span>
+                </div>
+            </div>
+            <div className="relative group flex items-center gap-4">
+                <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl group-focus-within:border-primary-500/50 transition-colors">
+                    <Icon className="w-5 h-5 text-zinc-500 group-hover:text-primary-400 transition-colors" />
+                </div>
+                <div className="relative flex-1 h-2 bg-white/[0.05] rounded-full overflow-hidden">
+                    <motion.div
+                        className="absolute h-full bg-gradient-to-r from-primary-600 to-primary-400"
+                        initial={false}
+                        animate={{ width: `${((value - min) / (max - min)) * 100}%` }}
+                    />
+                    <input
+                        type="range"
+                        min={min}
+                        max={max}
+                        step={step}
+                        value={value}
+                        onChange={(e) => onChange(parseFloat(e.target.value))}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [price, setPrice] = useState(product?.price || 29.99);
+    const [stock, setStock] = useState(product?.stock || 50);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -33,13 +94,28 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
 
         const formData = new FormData(e.currentTarget);
 
+        // Normalize Image URL
+        let imageUrl = formData.get('imageUrl') as string;
+        if (imageUrl && imageUrl.includes('unsplash.com/photos/')) {
+            // Convert page link to source link (best effort)
+            const id = imageUrl.split('/').pop();
+            if (id) {
+                imageUrl = `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=80&w=800`;
+                formData.set('imageUrl', imageUrl);
+            }
+        }
+
+        // Ensure slider values are included
+        formData.set('price', price.toString());
+        formData.set('stock', stock.toString());
+
         try {
             const result = isEditing
                 ? await updateProduct(product.id, formData)
                 : await createProduct(formData);
 
             if (result.success) {
-                router.push('/doctor/products');
+                router.push('/marketplace');
                 router.refresh();
             } else {
                 setError(result.error || 'Something went wrong');
@@ -51,132 +127,133 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         }
     }
 
+    const inputClasses = "w-full bg-white/[0.03] border border-white/10 rounded-2xl px-12 py-4 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all placeholder:text-zinc-600 font-medium";
+    const labelClasses = "text-xs font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 ml-1 block";
+
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
+        <form onSubmit={handleSubmit} className="space-y-10">
             {error && (
-                <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
-                    {error}
+                <div className="p-6 rounded-[2rem] bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-4 animate-shake">
+                    <AlertCircle className="w-6 h-6 shrink-0" />
+                    <p className="font-bold text-sm tracking-wide">{error}</p>
                 </div>
             )}
 
-            <div className="space-y-4">
-                <div>
-                    <label htmlFor="title" className="label">Product Title</label>
-                    <div className="relative">
-                        <ShoppingBag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-health-muted" />
-                        <input
-                            id="title"
-                            name="title"
-                            type="text"
-                            required
-                            defaultValue={product?.title}
-                            className="input pl-11"
-                            placeholder="e.g. Premium Yoga Mat"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label htmlFor="category" className="label">Category</label>
-                    <select
-                        id="category"
-                        name="category"
-                        required
-                        defaultValue={product?.category || ''}
-                        className="input"
-                    >
-                        <option value="" disabled>Select a category</option>
-                        {CATEGORIES.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                {/* Left Column: Basic Info & Sliders */}
+                <div className="space-y-10">
                     <div>
-                        <label htmlFor="price" className="label">Price ($)</label>
-                        <div className="relative">
-                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-health-muted" />
+                        <label className={labelClasses}>Product Identity</label>
+                        <div className="relative group">
+                            <ShoppingBag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-primary-400 transition-colors" />
                             <input
-                                id="price"
-                                name="price"
-                                type="number"
-                                step="0.01"
-                                min="0"
+                                name="title"
+                                type="text"
                                 required
-                                defaultValue={product?.price}
-                                className="input pl-11"
-                                placeholder="0.00"
+                                defaultValue={product?.title}
+                                className={inputClasses}
+                                placeholder="e.g. Elite Whey Isolate"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="stock" className="label">Stock Quantity</label>
-                        <div className="relative">
-                            <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-health-muted" />
-                            <input
-                                id="stock"
-                                name="stock"
-                                type="number"
-                                min="0"
+                        <label className={labelClasses}>Classification</label>
+                        <div className="relative group">
+                            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-primary-400 transition-colors z-10" />
+                            <select
+                                name="category"
                                 required
-                                defaultValue={product?.stock || 0}
-                                className="input pl-11"
-                                placeholder="0"
+                                defaultValue={product?.category || ''}
+                                className={cn(inputClasses, "appearance-none relative cursor-pointer")}
+                            >
+                                <option value="" disabled className="bg-zinc-900">Select Category</option>
+                                {CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat} className="bg-zinc-900">{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-10 pt-4 px-1">
+                        <StyledSlider
+                            label="Pricing Strategy"
+                            value={price}
+                            onChange={setPrice}
+                            min={0}
+                            max={500}
+                            step={0.5}
+                            unit="$"
+                            icon={DollarSign}
+                        />
+
+                        <StyledSlider
+                            label="Inventory Level"
+                            value={stock}
+                            onChange={setStock}
+                            min={0}
+                            max={1000}
+                            step={1}
+                            unit=" units"
+                            icon={Package}
+                        />
+                    </div>
+                </div>
+
+                {/* Right Column: Visuals & Narrative */}
+                <div className="space-y-10">
+                    <div>
+                        <label className={labelClasses}>Product Narrative</label>
+                        <div className="relative group">
+                            <AlignLeft className="absolute left-4 top-5 w-5 h-5 text-zinc-500 group-focus-within:text-primary-400 transition-colors" />
+                            <textarea
+                                name="description"
+                                required
+                                rows={6}
+                                defaultValue={product?.description}
+                                className={cn(inputClasses, "min-h-[220px] py-5 resize-none leading-relaxed")}
+                                placeholder="What makes this product special? Benefits, usage, and quality..."
                             />
                         </div>
                     </div>
-                </div>
 
-                <div>
-                    <label htmlFor="description" className="label">Description</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        required
-                        rows={5}
-                        defaultValue={product?.description}
-                        className="input min-h-[120px]"
-                        placeholder="Describe your product..."
-                    />
-                </div>
-
-                <div>
-                    <label htmlFor="imageUrl" className="label">Image URL</label>
-                    <div className="text-xs text-health-muted mb-2">
-                        For now, please provide a direct link to an image.
-                    </div>
-                    <div className="relative">
-                        <Upload className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-health-muted" />
-                        <input
-                            id="imageUrl"
-                            name="imageUrl"
-                            type="url"
-                            defaultValue={product?.images?.[0]}
-                            className="input pl-11"
-                            placeholder="https://example.com/image.jpg"
-                        />
+                    <div>
+                        <label className={labelClasses}>Visual Assets (URL)</label>
+                        <div className="relative group">
+                            <Upload className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-primary-400 transition-colors" />
+                            <input
+                                name="imageUrl"
+                                type="url"
+                                defaultValue={product?.images?.[0]}
+                                className={inputClasses}
+                                placeholder="https://images.unsplash.com/..."
+                            />
+                        </div>
+                        <p className="mt-3 text-[10px] font-bold text-zinc-600 uppercase tracking-widest ml-1">
+                            High-quality Unsplash or Shopify URLs recommended
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-health-border">
+            <div className="flex justify-end gap-6 pt-10 border-t border-white/5">
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-4 py-2 text-sm font-medium text-health-muted hover:text-health-text transition-colors"
+                    className="px-8 py-4 text-xs font-black text-zinc-500 hover:text-white uppercase tracking-[0.2em] transition-all"
                 >
-                    Cancel
+                    Discard Changes
                 </button>
-                <GradientButton type="submit" disabled={isLoading} className="w-32">
+                <GradientButton type="submit" disabled={isLoading} className="h-14 px-12 rounded-2xl min-w-[220px]">
                     {isLoading ? (
-                        <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Saving...
-                        </>
+                        <div className="flex items-center gap-3">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="uppercase tracking-widest text-xs font-black">Syncing...</span>
+                        </div>
                     ) : (
-                        isEditing ? 'Update Product' : 'Create Product'
+                        <span className="uppercase tracking-widest text-xs font-black">
+                            {isEditing ? 'Update Assets' : 'Publish Product'}
+                        </span>
                     )}
                 </GradientButton>
             </div>

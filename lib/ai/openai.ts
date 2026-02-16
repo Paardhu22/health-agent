@@ -148,10 +148,6 @@ export async function healthChat(
 
         let response = completion.choices[0]?.message?.content || '';
 
-        if (shouldAddDisclaimer(message, response)) {
-            response += RESPONSE_TEMPLATES.medicalDisclaimer;
-        }
-
         return response;
     } catch (error) {
         console.error('Health chat error:', error);
@@ -499,9 +495,7 @@ Remember: NO medication advice, NO diagnosis. Emphasize consulting healthcare pr
             messages: [{ role: 'user', content: prompt }],
         });
 
-        let response = completion.choices[0]?.message?.content || '';
-        response += RESPONSE_TEMPLATES.medicalDisclaimer;
-
+        const response = completion.choices[0]?.message?.content || '';
         return response;
     } catch (error) {
         console.error('Disease guidance error:', error);

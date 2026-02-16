@@ -23,9 +23,12 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  CheckCircle,
 } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const METRIC_TYPES = [
   { id: 'WEIGHT', label: 'Weight', unit: 'kg', icon: Scale, color: 'blue' },
@@ -38,6 +41,139 @@ const METRIC_TYPES = [
   { id: 'CALORIES_BURNED', label: 'Calories Burned', unit: 'kcal', icon: Flame, color: 'orange' },
   { id: 'WATER_INTAKE', label: 'Water Intake', unit: 'glasses', icon: Droplets, color: 'cyan' },
 ];
+
+const METRIC_RANGES: Record<string, { min: number, max: number, step?: number }> = {
+  WEIGHT: { min: 30, max: 200, step: 0.1 },
+  BLOOD_PRESSURE_SYS: { min: 60, max: 220, step: 1 },
+  BLOOD_PRESSURE_DIA: { min: 40, max: 140, step: 1 },
+  HEART_RATE: { min: 30, max: 220, step: 1 },
+  BLOOD_SUGAR: { min: 40, max: 500, step: 1 },
+  SLEEP_HOURS: { min: 0, max: 24, step: 0.5 },
+  STEPS: { min: 0, max: 50000, step: 100 },
+  CALORIES_BURNED: { min: 0, max: 5000, step: 50 },
+  WATER_INTAKE: { min: 0, max: 20, step: 1 },
+};
+
+function PremiumDropdown({
+  label,
+  value,
+  options,
+  onChange,
+  placeholder = "Select an option"
+}: {
+  label?: string;
+  value: string;
+  options: { value: string, label: string }[];
+  onChange: (val: string) => void;
+  placeholder?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative w-full">
+      {label && <label className="block text-sm font-medium text-zinc-400 mb-2 uppercase tracking-wider">{label}</label>}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-left flex items-center justify-between transition-all duration-300",
+          isOpen ? "border-primary-500 ring-2 ring-primary-500/20" : "hover:border-zinc-700 hover:bg-zinc-900/50"
+        )}
+      >
+        <span className={cn("font-semibold", selectedOption ? "text-white" : "text-zinc-500")}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown className={cn("w-5 h-5 text-zinc-500 transition-transform duration-300", isOpen && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <div className="relative z-[100]">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute left-0 right-0 mt-3 bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl z-50 backdrop-blur-3xl"
+            >
+              <div className="max-h-[300px] overflow-y-auto custom-scrollbar py-2">
+                {options.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      "w-full px-5 py-3.5 text-left transition-colors flex items-center justify-between border-b border-white/5 last:border-0",
+                      value === opt.value ? "bg-primary-500/10 text-primary-400 font-bold" : "text-zinc-400 hover:bg-zinc-900"
+                    )}
+                  >
+                    <span>{opt.label}</span>
+                    {value === opt.value && <CheckCircle className="w-4 h-4" />}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function StyledSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  unit,
+  onChange
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit: string;
+  onChange: (val: string) => void;
+}) {
+  return (
+    <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 transition-all duration-300 hover:border-primary-500/50 group">
+      <div className="flex justify-between items-center mb-6">
+        <label className="text-xs font-bold text-zinc-500 group-hover:text-primary-400 transition-colors uppercase tracking-[0.2em]">{label}</label>
+        <div className="flex items-baseline gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+          <span className="text-2xl font-black text-white">{value}</span>
+          <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">{unit}</span>
+        </div>
+      </div>
+      <div className="relative h-6 flex items-center">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step || 1}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full h-1.5 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
+        />
+      </div>
+      <div className="flex justify-between mt-3 px-1">
+        <span className="text-[10px] font-bold text-zinc-600 font-mono">{min}</span>
+        <span className="text-[10px] font-bold text-zinc-600 font-mono">{max}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function MetricsPage() {
   const [metrics, setMetrics] = useState<any[]>([]);
@@ -246,103 +382,114 @@ export default function MetricsPage() {
       )}
 
       {/* Add Metric Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-health-card border border-health-border rounded-2xl shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-4 border-b border-health-border">
-              <h3 className="font-semibold text-health-text">Log Health Metric</h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-health-muted" />
-              </button>
-            </div>
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-[100] p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+              onClick={() => setShowAddModal(false)}
+            />
 
-            <div className="p-4 space-y-4">
-              {/* Metric Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-health-text mb-2">
-                  Metric Type
-                </label>
-                <select
-                  value={selectedMetricType}
-                  onChange={(e) => setSelectedMetricType(e.target.value)}
-                  className="input"
-                >
-                  {METRIC_TYPES.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.label} ({type.unit})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Value Input */}
-              <div>
-                <label className="block text-sm font-medium text-health-text mb-2">
-                  Value ({selectedMetric?.unit})
-                </label>
-                <input
-                  type="number"
-                  value={metricValue}
-                  onChange={(e) => setMetricValue(e.target.value)}
-                  placeholder={`Enter ${selectedMetric?.label.toLowerCase()}`}
-                  className="input"
-                  step="0.1"
-                />
-              </div>
-
-              {/* Date Input */}
-              <div>
-                <label className="block text-sm font-medium text-health-text mb-2">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={metricDate}
-                  onChange={(e) => setMetricDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="input"
-                />
-              </div>
-
-              {error && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-zinc-950 border border-zinc-800 rounded-[2.5rem] shadow-2xl max-w-lg w-full z-10 overflow-hidden relative"
+            >
+              <div className="flex items-center justify-between p-8 border-b border-health-border/50">
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">Log Health Reading</h3>
+                  <p className="text-sm text-zinc-500 mt-1">Updates your health profile instantly</p>
                 </div>
-              )}
-            </div>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-all duration-300 group"
+                >
+                  <X className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
+                </button>
+              </div>
 
-            <div className="flex gap-3 p-4 border-t border-health-border">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="btn-secondary flex-1 border border-health-border hover:bg-white/5"
-              >
-                Cancel
-              </button>
-              <GradientButton
-                onClick={handleAddMetric}
-                disabled={!metricValue || isSaving}
-                className="flex-1"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Save Metric
-                  </>
+              <div className="p-8 space-y-8">
+                {/* Metric Type Selection */}
+                <PremiumDropdown
+                  label="What reading are you logging?"
+                  value={selectedMetricType}
+                  options={METRIC_TYPES.map(t => ({ value: t.id, label: `${t.label} (${t.unit})` }))}
+                  onChange={setSelectedMetricType}
+                />
+
+                {/* Value Input with Slider */}
+                {selectedMetric && (
+                  <StyledSlider
+                    label={`Adjust ${selectedMetric.label}`}
+                    value={parseFloat(metricValue) || METRIC_RANGES[selectedMetricType]?.min || 0}
+                    min={METRIC_RANGES[selectedMetricType]?.min || 0}
+                    max={METRIC_RANGES[selectedMetricType]?.max || 100}
+                    step={METRIC_RANGES[selectedMetricType]?.step}
+                    unit={selectedMetric.unit}
+                    onChange={setMetricValue}
+                  />
                 )}
-              </GradientButton>
-            </div>
+
+                {/* Date Input */}
+                <div className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Calendar className="w-4 h-4 text-primary-400" />
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Recorded Date</label>
+                  </div>
+                  <input
+                    type="date"
+                    value={metricDate}
+                    onChange={(e) => setMetricDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+                  />
+                </div>
+
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium flex items-center gap-3"
+                  >
+                    <AlertCircle className="w-5 h-5 shrink-0" />
+                    {error}
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="flex gap-4 p-8 pt-0">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-6 py-4 rounded-2xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-all border border-white/5 flex-1"
+                >
+                  Cancel
+                </button>
+                <GradientButton
+                  onClick={handleAddMetric}
+                  disabled={!metricValue || isSaving}
+                  className="flex-1 py-4 h-auto text-sm"
+                >
+                  {isSaving ? (
+                    <span className="flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <Check className="w-5 h-5 mr-2" />
+                      Save Metric
+                    </span>
+                  )}
+                </GradientButton>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Tips */}
       <div className="card mt-6 bg-blue-500/10 border-blue-500/20">
