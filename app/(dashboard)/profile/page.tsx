@@ -27,8 +27,9 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { AvatarPreview, DEFAULT_AVATAR } from '@/components/ui/avatar-builder';
+import { DEFAULT_AVATAR } from '@/components/ui/avatar-builder';
 import type { AvatarConfig } from '@/components/ui/avatar-builder';
+import { Avatar3D } from '@/components/ui/avatar-3d';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -155,7 +156,7 @@ export default function ProfilePage() {
           className="rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-8 flex flex-col items-center shadow-sm relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
-          <AvatarPreview config={avatarConfig} size={96} className="ring-4 ring-zinc-200 dark:ring-zinc-800" />
+          <Avatar3D config={avatarConfig} className="w-40 h-40 rounded-full overflow-hidden ring-4 ring-zinc-200 dark:ring-zinc-800 bg-zinc-100 dark:bg-zinc-800/50 shadow-lg" />
           <h2 className="mt-4 text-lg font-medium text-health-text tracking-tight">{userName}</h2>
           <p className="text-xs text-zinc-500 mt-1">Member since {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</p>
         </motion.div>

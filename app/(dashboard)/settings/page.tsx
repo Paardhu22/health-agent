@@ -18,8 +18,9 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '@/components/theme-provider';
 import { toast } from 'sonner';
-import { AvatarPreview, AvatarCustomizer, DEFAULT_AVATAR } from '@/components/ui/avatar-builder';
+import { AvatarCustomizer, DEFAULT_AVATAR } from '@/components/ui/avatar-builder';
 import type { AvatarConfig } from '@/components/ui/avatar-builder';
+import { Avatar3D } from '@/components/ui/avatar-3d';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -152,7 +153,7 @@ export default function SettingsPage() {
           <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 overflow-hidden">
             {/* Avatar preview + edit toggle */}
             <div className="px-5 py-5 flex items-center gap-5">
-              <AvatarPreview config={avatarConfig} size={72} />
+              <Avatar3D config={avatarConfig} className="w-[72px] h-[72px] rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800/50" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-health-text truncate">
                   {userName || 'Your Avatar'}
@@ -182,7 +183,7 @@ export default function SettingsPage() {
                   <div className="px-5 pb-5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                     {/* Live preview */}
                     <div className="flex justify-center mb-6">
-                      <AvatarPreview config={avatarConfig} size={140} />
+                      <Avatar3D config={avatarConfig} className="w-[200px] h-[300px] rounded-2xl overflow-hidden bg-gradient-to-b from-zinc-100 to-white dark:from-zinc-800 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-inner" />
                     </div>
 
                     {/* Customizer controls */}
