@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/actions/auth';
-import { updateUserPreferences, deleteAccount, getUser } from '@/lib/actions/user';
+import { updateUserPreferences, deleteAccount, getUser, updateAvatarConfig, updateProfileVisibility, getAvatarConfig } from '@/lib/actions/user';
 import {
   LogOut,
   Trash2,
@@ -12,18 +12,27 @@ import {
   Check,
   Moon,
   Sun,
-  Globe,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '@/components/theme-provider';
 import { toast } from 'sonner';
+import { AvatarPreview, AvatarCustomizer, DEFAULT_AVATAR } from '@/components/ui/avatar-builder';
+import type { AvatarConfig } from '@/components/ui/avatar-builder';
 
 export default function SettingsPage() {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const { theme, setTheme } = useTheme();
+
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR);
+  const [isProfilePublic, setIsProfilePublic] = useState(true);
+  const [userName, setUserName] = useState('');
 
   const [notifications, setNotifications] = useState({
     appointments: true,
@@ -33,13 +42,22 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    async function loadPreferences() {
+    async function loadData() {
       const user = await getUser();
       if ((user as any)?.preferences) {
         setNotifications((user as any).preferences);
       }
+
+      const avatarData = await getAvatarConfig();
+      if (avatarData) {
+        if (avatarData.avatarConfig) {
+          setAvatarConfig(avatarData.avatarConfig as AvatarConfig);
+        }
+        setIsProfilePublic(avatarData.isProfilePublic ?? true);
+        setUserName(avatarData.name || '');
+      }
     }
-    loadPreferences();
+    loadData();
   }, []);
 
   async function handleLogout() {
@@ -57,6 +75,39 @@ export default function SettingsPage() {
     } catch (error) {
       toast.error('Failed to update preferences');
       setNotifications(notifications);
+    }
+  }
+
+  async function handleSaveAvatar() {
+    setIsSavingAvatar(true);
+    try {
+      const result = await updateAvatarConfig(avatarConfig);
+      if ('error' in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Avatar updated');
+        setShowAvatarEditor(false);
+      }
+    } catch {
+      toast.error('Failed to save avatar');
+    }
+    setIsSavingAvatar(false);
+  }
+
+  async function handleVisibilityChange() {
+    const newValue = !isProfilePublic;
+    setIsProfilePublic(newValue);
+    try {
+      const result = await updateProfileVisibility(newValue);
+      if ('error' in result && result.error) {
+        toast.error(result.error);
+        setIsProfilePublic(!newValue);
+      } else {
+        toast.success(newValue ? 'Profile is now public' : 'Profile is now private');
+      }
+    } catch {
+      toast.error('Failed to update visibility');
+      setIsProfilePublic(!newValue);
     }
   }
 
@@ -89,7 +140,70 @@ export default function SettingsPage() {
           </h1>
         </motion.div>
 
-        {/* Account */}
+        {/* ═══ Avatar Section ═══ */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.03 }}
+          className="space-y-3"
+        >
+          <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Avatar</h2>
+
+          <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+            {/* Avatar preview + edit toggle */}
+            <div className="px-5 py-5 flex items-center gap-5">
+              <AvatarPreview config={avatarConfig} size={72} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-health-text truncate">
+                  {userName || 'Your Avatar'}
+                </p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Customize your profile avatar
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAvatarEditor(!showAvatarEditor)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-health-text hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
+              >
+                {showAvatarEditor ? 'Close' : 'Customize'}
+              </button>
+            </div>
+
+            {/* Inline editor */}
+            <AnimatePresence>
+              {showAvatarEditor && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    {/* Live preview */}
+                    <div className="flex justify-center mb-6">
+                      <AvatarPreview config={avatarConfig} size={140} />
+                    </div>
+
+                    {/* Customizer controls */}
+                    <AvatarCustomizer config={avatarConfig} onChange={setAvatarConfig} />
+
+                    {/* Save button */}
+                    <button
+                      onClick={handleSaveAvatar}
+                      disabled={isSavingAvatar}
+                      className="w-full mt-6 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                    >
+                      {isSavingAvatar ? 'Saving...' : 'Save Avatar'}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* ═══ Account ═══ */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -108,6 +222,29 @@ export default function SettingsPage() {
                 <p className="text-xs text-zinc-500 text-left">Update your health information</p>
               </div>
               <ChevronRight className="w-4 h-4 text-zinc-400" />
+            </button>
+
+            {/* Profile Visibility */}
+            <button
+              onClick={handleVisibilityChange}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {isProfilePublic ? (
+                  <Eye className="w-4 h-4 text-zinc-500" />
+                ) : (
+                  <EyeOff className="w-4 h-4 text-zinc-500" />
+                )}
+                <div className="text-left">
+                  <p className="text-sm font-medium text-health-text">Profile Visibility</p>
+                  <p className="text-xs text-zinc-500">
+                    {isProfilePublic ? 'Your profile is public' : 'Your profile is private'}
+                  </p>
+                </div>
+              </div>
+              <div className={`w-11 h-6 rounded-full relative transition-colors ${isProfilePublic ? 'bg-primary-600' : 'bg-zinc-700'}`}>
+                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${isProfilePublic ? 'left-[22px]' : 'left-0.5'}`} />
+              </div>
             </button>
 
             <div className="w-full flex items-center justify-between px-5 py-4 opacity-40 cursor-not-allowed">

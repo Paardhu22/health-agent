@@ -56,3 +56,63 @@ export async function getUser() {
         return null;
     }
 }
+
+export async function updateAvatarConfig(config: {
+    gender: string;
+    skinColor: string;
+    hairType: string;
+    clothing: string;
+}) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return { error: 'Unauthorized' };
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { avatarConfig: config as any },
+        });
+
+        revalidatePath('/settings');
+        revalidatePath('/profile');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update avatar' };
+    }
+}
+
+export async function updateProfileVisibility(isPublic: boolean) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return { error: 'Unauthorized' };
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { isProfilePublic: isPublic },
+        });
+
+        revalidatePath('/settings');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update visibility' };
+    }
+}
+
+export async function getAvatarConfig() {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return null;
+
+        const fullUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+                avatarConfig: true,
+                isProfilePublic: true,
+                name: true,
+            },
+        });
+
+        return fullUser;
+    } catch (error) {
+        return null;
+    }
+}

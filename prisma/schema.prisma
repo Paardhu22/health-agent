@@ -14,6 +14,8 @@ model User {
   name            String
   role            Role                @default(PATIENT)
   avatar          String?
+  avatarConfig    Json?
+  isProfilePublic Boolean             @default(true)
   preferences     Json?               @default("{}")
   emailVerified   DateTime?
   createdAt       DateTime            @default(now())
