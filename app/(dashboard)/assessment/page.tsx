@@ -21,6 +21,7 @@ import {
   Info,
   Target,
   Gauge,
+  Star,
 } from 'lucide-react';
 
 export default function AssessmentPage() {
@@ -130,18 +131,18 @@ export default function AssessmentPage() {
                 <p className="text-health-muted mb-4">{assessment.overall.summary}</p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   {assessment.overall.score >= 80 && (
-                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-                      ⭐ Excellent Health
+                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm flex items-center gap-1">
+                      <Star className="w-4 h-4" /> Excellent Health
                     </span>
                   )}
                   {assessment.overall.score >= 60 && assessment.overall.score < 80 && (
-                    <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm">
-                      💪 Good Progress
+                    <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm flex items-center gap-1">
+                      <TrendingUp className="w-4 h-4" /> Good Progress
                     </span>
                   )}
                   {assessment.overall.score < 60 && (
-                    <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm">
-                      🎯 Room to Improve
+                    <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm flex items-center gap-1">
+                      <Target className="w-4 h-4" /> Room to Improve
                     </span>
                   )}
                 </div>

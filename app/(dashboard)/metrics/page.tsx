@@ -25,6 +25,7 @@ import {
   ChevronRight,
   ChevronDown,
   CheckCircle,
+  Info,
 } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { cn } from '@/lib/utils';
@@ -493,7 +494,7 @@ export default function MetricsPage() {
 
       {/* Tips */}
       <div className="card mt-6 bg-blue-500/10 border-blue-500/20">
-        <h3 className="font-semibold text-blue-400 mb-2">💡 Tips for Tracking</h3>
+        <h3 className="font-semibold text-blue-400 mb-2 flex items-center gap-2"><Info className="w-5 h-5" /> Tips for Tracking</h3>
         <ul className="space-y-1 text-sm text-blue-300">
           <li>• Log your metrics at the same time each day for consistency</li>
           <li>• Track weight first thing in the morning for accurate readings</li>

@@ -186,7 +186,7 @@ export default function AppointmentsPage() {
 
       {view === 'book' ? (
         <div className="grid lg:grid-cols-12 gap-8">
-          {/* Column 1: Smart Booking & Expert List */}
+          {/* Column 1: Smart Booking */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-3xl p-6 shadow-2xl">
               <div className="flex items-center gap-3 mb-4">
@@ -217,67 +217,28 @@ export default function AppointmentsPage() {
                 <div className="mt-4 p-4 rounded-2xl bg-primary-950/20 border border-primary-900/30 animate-fadeIn">
                   <p className="text-xs font-bold text-primary-400 uppercase tracking-widest mb-2">Analysis Result</p>
                   <div className="space-y-1 text-sm text-zinc-300">
-                    <p>📅 {nlExtraction.date || 'TBD'}</p>
-                    <p>⏰ {nlExtraction.time || 'TBD'}</p>
-                    <p>👨‍⚕️ {nlExtraction.doctorName || 'TBD'}</p>
+                    <p className="flex items-center gap-2"><Calendar className="w-4 h-4 text-primary-400" /> {nlExtraction.date || 'TBD'}</p>
+                    <p className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary-400" /> {nlExtraction.time || 'TBD'}</p>
+                    <p className="flex items-center gap-2"><User className="w-4 h-4 text-primary-400" /> {nlExtraction.doctorName || 'TBD'}</p>
                   </div>
                 </div>
               )}
             </div>
-
-            <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-3xl p-6 shadow-2xl">
-              <h3 className="text-lg font-bold mb-4">Select Specialist</h3>
-              <div className="flex bg-zinc-950/50 rounded-xl p-1 mb-4 border border-zinc-800">
-                {['all', 'doctors', 'instructors'].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategory(cat as any)}
-                    className={cn(
-                      "flex-1 py-1.5 text-xs font-bold rounded-lg capitalize transition-all",
-                      category === cat ? "bg-zinc-800 text-white" : "text-zinc-600 hover:text-zinc-400"
-                    )}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-              <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
-                {filteredDoctors.map((doctor) => (
-                  <button
-                    key={doctor.id}
-                    onClick={() => setSelectedDoctor(doctor)}
-                    className={cn(
-                      "w-full p-4 rounded-2xl border transition-all duration-300 group text-left",
-                      selectedDoctor?.id === doctor.id
-                        ? "bg-primary-600/10 border-primary-500/50 shadow-[0_0_20px_rgba(37,99,235,0.1)]"
-                        : "bg-zinc-900/20 border-zinc-800/50 hover:bg-zinc-800/30 hover:border-zinc-700"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-zinc-300 group-hover:bg-zinc-700 transition-colors">
-                          {doctor.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-black" />
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <div className="flex items-center justify-between gap-2 overflow-hidden">
-                          <p className="font-bold text-sm truncate">{doctor.name}</p>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold">₹{doctor.consultationFee}</span>
-                        </div>
-                        <p className="text-xs text-zinc-500 font-medium truncate">{doctor.specialization}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Column 2: Details & Booking */}
+          {/* Column 2: Doctor List / Details & Booking */}
           <div className="lg:col-span-8 space-y-6">
             {selectedDoctor ? (
               <div className="animate-slideUp space-y-6">
+                {/* Back button to go back to list */}
+                <button
+                  onClick={() => setSelectedDoctor(null)}
+                  className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to specialists
+                </button>
+
                 <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/5 rounded-full blur-3xl -mr-32 -mt-32" />
                   <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 p-0.5 shadow-2xl">
@@ -421,10 +382,51 @@ export default function AppointmentsPage() {
                 )}
               </div>
             ) : (
-              <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-center p-12 bg-zinc-900/20 rounded-[40px] border border-dashed border-zinc-800">
-                <User className="w-12 h-12 text-zinc-800 mb-4" />
-                <h3 className="text-xl font-bold text-zinc-400 mb-2">Select a Doctor</h3>
-                <p className="text-zinc-600 max-w-xs">Pick a specialist to view their availability and book your session.</p>
+              /* Doctor List - shown when no doctor is selected */
+              <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-3xl p-6 shadow-2xl">
+                <h3 className="text-xl font-bold mb-2">Select a Doctor</h3>
+                <p className="text-sm text-zinc-500 mb-6">Pick a specialist to view their availability and book your session.</p>
+
+                <div className="flex bg-zinc-950/50 rounded-xl p-1 mb-6 border border-zinc-800">
+                  {['all', 'doctors', 'instructors'].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setCategory(cat as any)}
+                      className={cn(
+                        "flex-1 py-2 text-sm font-bold rounded-lg capitalize transition-all",
+                        category === cat ? "bg-zinc-800 text-white" : "text-zinc-600 hover:text-zinc-400"
+                      )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {filteredDoctors.map((doctor) => (
+                    <button
+                      key={doctor.id}
+                      onClick={() => setSelectedDoctor(doctor)}
+                      className="w-full p-5 rounded-2xl border border-zinc-800/50 bg-zinc-900/20 hover:bg-zinc-800/30 hover:border-zinc-700 transition-all duration-300 text-left group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-zinc-300 group-hover:bg-zinc-700 transition-colors">
+                            {doctor.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-black" />
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                          <div className="flex items-center justify-between gap-2 overflow-hidden">
+                            <p className="font-bold text-sm truncate">{doctor.name}</p>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold">₹{doctor.consultationFee}</span>
+                          </div>
+                          <p className="text-xs text-zinc-500 font-medium truncate">{doctor.specialization}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

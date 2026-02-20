@@ -21,9 +21,9 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-health-bg">
+    <div className="min-h-screen">
       <CartProvider>
-        <div className="min-h-screen relative">
+        <div className="min-h-screen relative z-10">
           <UserCapsule user={user} />
           <ProfileAlert
             isComplete={!!user.healthProfile?.isComplete}

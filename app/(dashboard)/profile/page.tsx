@@ -27,9 +27,8 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { DEFAULT_AVATAR } from '@/components/ui/avatar-builder';
-import type { AvatarConfig } from '@/components/ui/avatar-builder';
-import { Avatar3D } from '@/components/ui/avatar-3d';
+import { ProfileAvatar } from '@/components/features/profile/ProfileAvatar';
+
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -39,8 +38,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR);
-  const [userName, setUserName] = useState('');
+
 
   // Edit form state
   const [formData, setFormData] = useState<any>({});
@@ -72,14 +70,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadProfile();
-    async function loadAvatar() {
-      const data = await getAvatarConfig();
-      if (data) {
-        if (data.avatarConfig) setAvatarConfig(data.avatarConfig as AvatarConfig);
-        setUserName(data.name || '');
-      }
-    }
-    loadAvatar();
   }, [loadProfile]);
 
   async function handleSave() {
@@ -148,18 +138,6 @@ export default function ProfilePage() {
     <div className="relative pb-24">
       <div className="max-w-3xl mx-auto pt-4 space-y-10">
 
-        {/* Avatar Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-8 flex flex-col items-center shadow-sm relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
-          <Avatar3D config={avatarConfig} className="w-40 h-40 rounded-full overflow-hidden ring-4 ring-zinc-200 dark:ring-zinc-800 bg-zinc-100 dark:bg-zinc-800/50 shadow-lg" />
-          <h2 className="mt-4 text-lg font-medium text-health-text tracking-tight">{userName}</h2>
-          <p className="text-xs text-zinc-500 mt-1">Member since {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</p>
-        </motion.div>
 
         {/* Header */}
         <motion.div
@@ -349,8 +327,6 @@ export default function ProfilePage() {
               animate={{ opacity: 1, scale: 1 }}
               className="rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-8 flex flex-col md:flex-row items-center justify-between shadow-sm relative overflow-hidden"
             >
-              {/* Subtle top accent */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
 
               <div className="text-center md:text-left mb-6 md:mb-0">
                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Body Mass Index</p>
@@ -461,6 +437,7 @@ export default function ProfilePage() {
             </Section>
           </div>
 
+
           <Section title="Primary Health Goals" layoutId="goals">
             {isEditing ? (
               <div className="p-2">
@@ -488,6 +465,11 @@ export default function ProfilePage() {
               </div>
             )}
           </Section>
+
+          {/* Profile Avatar Section */}
+          <div className="flex justify-center py-8">
+            <ProfileAvatar gender={profile.gender} />
+          </div>
 
         </div>
       </div>

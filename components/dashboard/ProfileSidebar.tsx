@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { User, Target, AlertCircle } from 'lucide-react';
+
 import { GradientButton } from '@/components/ui/gradient-button';
 
 interface ProfileSidebarProps {
@@ -13,7 +13,7 @@ export function ProfileSidebar({ user, healthProfile }: ProfileSidebarProps) {
     if (!healthProfile) {
         return (
             <div className="sticky top-24 bg-zinc-50 dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-100 dark:border-zinc-800 text-center">
-                <User className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
+                <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-bold text-lg mx-auto mb-4">{user.name.charAt(0)}</div>
                 <h3 className="font-medium text-health-text mb-2">Complete Profile</h3>
                 <p className="text-sm text-zinc-500 mb-6">
                     Set up your health profile to get AI recommendations.
@@ -49,10 +49,7 @@ export function ProfileSidebar({ user, healthProfile }: ProfileSidebarProps) {
 
             {/* Goal */}
             <div className="pt-2">
-                <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4 text-primary-500" />
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Current Goal</span>
-                </div>
+                <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Current Goal</p>
                 <p className="font-medium text-health-text">
                     {healthProfile.primaryGoal ? formatGoal(healthProfile.primaryGoal) : 'Not set'}
                 </p>
@@ -61,10 +58,7 @@ export function ProfileSidebar({ user, healthProfile }: ProfileSidebarProps) {
             {/* Conditions */}
             {healthProfile.existingConditions && healthProfile.existingConditions.length > 0 && (
                 <div className="pt-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle className="w-4 h-4 text-orange-500" />
-                        <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Conditions</span>
-                    </div>
+                    <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Conditions</p>
                     <div className="flex flex-wrap gap-2">
                         {healthProfile.existingConditions.map((c: string) => (
                             <span key={c} className="px-2 py-1 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-700 rounded-md text-xs text-zinc-600 dark:text-zinc-400">
